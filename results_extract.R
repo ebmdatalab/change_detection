@@ -1,32 +1,35 @@
+print("Extracting and classifying changes")
+
 library(caTools)
 library(gets) ### main package for break detection - see Pretis, Reade, and Sucarrat, Journal of Stat. Software, in press.
 
-
+##### Retrive arguments from Python command
+arguments <- commandArgs(trailingOnly = TRUE)
 ###################################################################
 #######################################
 ########### B: Extract Trend-Break Results
 #######################################
 ####################################################################
 
-rm(list = ls())  #clear the workspace
+#rm(list = ls())  #clear the workspace
 
-setwd("C:\\Users\\ajwalker\\Documents\\GitHub\\prescribing_change_metrics\\data\\chemical_per_list_size") # for testing only
+#setwd("C:\\Users\\ajwalker\\Documents\\GitHub\\prescribing_change_metrics\\data\\chemical_per_list_size") # for testing only
+setwd(arguments[1])
 
-load("r_output_0.RData")
+#load("r_output_2.RData")
+load(arguments[2])
 vars.list <- length(result.list)
 
 #### additional source code for trend functions for analysis
-this.dir <- dirname(parent.frame(2)$ofile)
-print(paste(this.dir, "/trend_isat_functions.R", sep = ""))
-source(paste(this.dir, "/trend_isat_functions.R", sep = ""))
-#source("~/GitHub/prescribing_change_metrics/trend_isat_functions.R")
+arguments <- commandArgs(trailingOnly = TRUE)
+source(paste(arguments[4], "\\trend_isat_functions.R", sep = ""))
 
 ####################
 ########## Calibration of Analysis
 ###################
 
 saveplots_analysis <- TRUE ###save plots of output of analysis
-fig_path_tis_analysis <- paste("./figures") ###set path to store analysis figures
+fig_path_tis_analysis <- paste(arguments[4], "/data/chemical_per_list_size/figures/", sep = "") ###set path to store analysis figures
 
 ###### Timing Measures
 known.t <- 0 ### Time of known intervention in the sample, e.g. medication became available as generic at observation t=18
@@ -66,18 +69,13 @@ results$is.intlev.levdprop <- NA ### Proportion of drop
 ################### Loop over different series
 
 for (i in 1:(vars.list)) 
-  
+
 {
-  
-  
-  print(i)
-  print(names.rel[i])
+  #print(names.rel[i])
   y <- data.pick[names.rel[i]]
   results$name[i] <- names.rel[i]
   islstr.res <- result.list[[i]]
-  
-  # plot(islstr.res)
-  
+
   ### Number of trend breaks
   nbreak <- NROW(grep("tis", islstr.res$ISnames))  
   results$is.nbreak[i] <-  nbreak #number of breaks
@@ -106,11 +104,13 @@ for (i in 1:(vars.list))
     fit.res <- fitted(islstr.res) ##fitted values
     
     #### Measure 1.1: the first negative break where the coefficient path is also downward sloping
-    is.first.neg <- min(which(tis.path$indic.fit$coef < 0))
+    #is.first.neg <- min(which(tis.path$indic.fit$coef < 0))
+    is.first.neg <- min(which(tis.path$indic.fit$coef != 0))
     results$is.tfirstneg[i] <- is.first.neg
     
     ### Measure 1.2: first negative break after the known break-date intervention
-    is.first.neg.pknown <- min( tdates[which(tis.path$indic.fit$coef[tdates] < 0)][tdates[which(tis.path$indic.fit$coef[tdates] < 0)] > known.t] )
+    #is.first.neg.pknown <- min( tdates[which(tis.path$indic.fit$coef[tdates] < 0)][tdates[which(tis.path$indic.fit$coef[tdates] < 0)] > known.t] )
+    is.first.neg.pknown <- min( tdates[which(tis.path$indic.fit$coef[tdates] != 0)][tdates[which(tis.path$indic.fit$coef[tdates] != 0)] > known.t] )
     results$is.tfirstneg.pknown[i] <- is.first.neg.pknown
     
     #### Measure 1.3: the first negative break where there is no subsequent offset of at least break.t.lim 
@@ -157,11 +157,11 @@ for (i in 1:(vars.list))
     } 
     
     ### Store first negative break which is not offset and which occurs after known break date
-    is.first.neg.pknown.offs <- min(tdates[rel.coef < 0 & tdates >= known.t & tis.path$indic.fit$coef[tdates] < 0 & offset == FALSE])
+    is.first.neg.pknown.offs <- min(tdates[rel.coef != 0 & tdates >= known.t & tis.path$indic.fit$coef[tdates] != 0 & offset == FALSE])
     results$is.tfirstneg.pknown.offs[i] <- is.first.neg.pknown.offs
     
     ### Store first negative break which is not offset  (regardless of known break date)
-    is.first.neg.offs <- min(tdates[rel.coef < 0  & tis.path$indic.fit$coef[tdates] < 0 & offset == FALSE])
+    is.first.neg.offs <- min(tdates[rel.coef != 0  & tis.path$indic.fit$coef[tdates] != 0 & offset == FALSE])
     results$is.tfirstneg.offs[i] <- is.first.neg.offs
     
     #############################################
@@ -231,12 +231,15 @@ for (i in 1:(vars.list))
         wid <- 500
         hei <- 500
         par(mfrow=c(1,1))
-        plot(islstr.res$aux$y, col="black", ylim=c(0, 1), ylab="Proportion of chemical within paragraph", xlab="Time series months", type="l") ##
+        plot(islstr.res$aux$y, col="black", ylab="Proportion of chemical within paragraph", xlab="Time series months", type="l") ##
         abline(h=fit.res[is.first.neg.pknown-1], lty=3, col="purple", lwd=2)### start value
         abline(h=fit.res[NROW(fit.res)], lty=3, col="purple", lwd=2)### end value
         lines(coef.p+mconst.res,  col="red", lwd=2) ###fitted lines
         lines(coef.p.hl+mconst.res, col=rgb(red = 1, green = 0.4118, blue = 0, alpha = 0.5), lwd=15) ###section used to evaluate slope
-        abline(v=tdates[min(big.break.index)], lty=2, col="blue", lwd=2) ## first negative break after intervention which is not off-set
+        #print(big.break.index)
+        if (length(big.break.index) != 0){
+          abline(v=tdates[min(big.break.index)], lty=2, col="blue", lwd=2) ## first negative break after intervention which is not off-set
+        }
         #abline(v=known.t, lty=1, col="blue", lwd=2)### known intervention, blue dottedwarnings()
         
         
@@ -275,11 +278,10 @@ for (i in 1:(vars.list))
     results$is.intlev.levd[i] <- as.numeric(init.lev) - as.numeric(end.lev)   #absulte change
     results$is.intlev.levdprop[i] <-  (as.numeric(init.lev) - as.numeric(end.lev))/as.numeric(init.lev)         #percentage change
     
+    print(paste(round((i / vars)*100,1), "%"))
   } ## if there are breaks closed
   
 } #loop over i closed 
 
-
-#save(results, file="resultsCCG_analysis.RData")
-write.csv(results, file = "chem_para_results.csv")
-#write.csv(results, file = "practice_results_cerazette.csv")
+write.csv(results, file = arguments[3])
+print("Done extracting results")
