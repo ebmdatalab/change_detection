@@ -4,6 +4,7 @@ print("Change detection running...")
 arguments <- commandArgs(trailingOnly = TRUE)
 
 #rm(list = ls())  #clear the workspace
+#setwd("C:/Users/Alex/Documents/GitHub/prescribing_change_metrics/data/chemical_per_list_size")
 setwd(arguments[1]) ### Set working directory
 
 ########################

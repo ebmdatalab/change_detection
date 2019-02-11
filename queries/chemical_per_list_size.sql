@@ -29,5 +29,5 @@ WHERE
 ORDER BY
   code,
   month
---LIMIT
---  4000
+LIMIT
+  4000
