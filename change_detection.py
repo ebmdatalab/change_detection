@@ -1,25 +1,41 @@
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 import os
 import subprocess
+import multiprocessing
+import glob
 
 
-class change_detection(object):
-    '''requires the name of a sql query file (with suffix .sql)
-    and the number of CPU cores to split the dataframe over for running R'''
-    
-    def __init__(self, name, num_cores=1):
-        query = name + '.sql'
+def install_r_packages():
+    '''
+    Installs the following R modules:
+    # zoo
+    # caTools
+    # gets
+    '''
+    command = 'Rscript'
+    path2script = os.getcwd() + '\\install_packages.R'
+    cmd = [command, path2script]
+    return subprocess.call(cmd)
+
+
+class ChangeDetection(object):
+    '''
+    Requires the name of a sql query file 
+        - file must have suffix ".sql"
+        - but not the name.
+    '''
+    def __init__(self, name):
+        query = 'queries/' + name + '.sql'
         with open(query) as q:
             self.query = q.read()
         self.name = name
-        self.num_cores = num_cores
+        self.num_cores = multiprocessing.cpu_count()
         
         ## Create dir for results
         self.working_dir = os.getcwd() + "\\data\\" + self.name
         os.makedirs(self.working_dir, exist_ok=True)
-    
+        
     def run_query(self):
         self.data = pd.read_gbq(self.query,
                                 dialect='standard',
@@ -29,12 +45,12 @@ class change_detection(object):
     def shape_dataframe(self):
         input_df = self.run_query()
         input_df = input_df.sort_values(['code','month'])
-        input_df['ratio'] = input_df['numerator'] / (input_df['denominator'] / 1000)
-        input_df['code'] = 'ratio_quantity.' + input_df['code'] ## R code requires this header format
+        input_df['ratio'] = input_df['numerator']/(input_df['denominator']/1000)
+        input_df['code'] = 'ratio_quantity.' + input_df['code'] ## R script requires this header format
         input_df = input_df.set_index(['month','code'])
         
         ## drop small numbers
-        mask = (input_df['numerator'] > 50) & (input_df['denominator']> 1000)
+        mask = (input_df['numerator']>50) & (input_df['denominator']>1000)
         input_df = input_df.loc[mask]
         input_df = input_df.drop(columns=['numerator','denominator'])
         
@@ -54,69 +70,102 @@ class change_detection(object):
         input_df = input_df.drop(cols_to_drop, axis=1)
         
         ## date to unix timecode (for R)
-        input_df.index = (input_df.index - pd.Timestamp("1970-01-01")) // pd.Timedelta('1s')
+        input_df.index = input_df.index - pd.Timestamp("1970-01-01")
+        input_df.index = input_df.index // pd.Timedelta('1s')
         
-        return input_df #None
+        return input_df
     
+    def run_r_script(self, i, script_name, input_name, output_name, *args):
+        '''        
+        - have reduced outputs (a bit faster that way)
+            - for debugging purposes remove "stderr=subprocess.DEVNULL"
+        '''
+        ## Define R command
+        command = 'Rscript'
+        path2script = os.getcwd() + script_name
+        cmd = [command, path2script]
+
+        ## Define arguments to pass to R
+        arguments = [self.working_dir, input_name, output_name]
+        for arg in args:
+            arguments.append(arg)
+
+        ## run the command (results stored as RData files to be appended later)
+        if i==0:
+            return subprocess.Popen(cmd + arguments, stderr=subprocess.DEVNULL)
+        else:
+            return subprocess.Popen(cmd + arguments,
+                                    stderr=subprocess.DEVNULL,
+                                    stdout=subprocess.DEVNULL)
     
     def r_detect(self):
         '''
         Splits the DataFrame in pieces and runs the change detection algorithm
         on a separate process for each piece
-        - minor issue with this is that it turns the R output into garbled
-          nonsense 
-            - presumably as it tries to display outputs from multiple
-              processes simultaneously
-            - for debugging purposes, can just use a single instance
-              of a reduced sample
-        
-        Requires the following R modules:
-        # zoo
-        # caTools
-        # gets
-        Done from within the R code
-        (install commands now commented out in R code).
         '''
-        
         ## Get data and split
-        split_df = np.array_split(self.shape_dataframe(),self.num_cores, axis=1)
+        split_df = np.array_split(self.shape_dataframe(),
+                                  self.num_cores,
+                                  axis=1)
         
         ## Initiate a seperate R process for each sub-DataFrame
         i = 0
         processes = []
         for item in split_df:
+            script_name = '\\change_detection.R'
+            input_name = "r_input_%s.csv" % (i)
+            output_name = "r_intermediate_%s.RData" % (i)
+            
             df = pd.DataFrame(item)
-            csv_name = "r_input_%s.csv" % (i)
-            output_name = "r_output_%s.RData" % (i)
-            df.to_csv(self.working_dir + '\\' + csv_name)
+            df.to_csv(self.working_dir + '\\' + input_name)
             
-            ## Define command and arguments
-            command = 'Rscript'
-            path2script = os.getcwd() + '\\change_detection.R'
-            
-            ## Variable number of args in a list
-            args = [self.working_dir, csv_name, output_name]
-            
-            ## Build subprocess command
-            cmd = [command, path2script] + args
-            
-            import time
-            tic = time.clock()
-            
-            ## run the command (results stored as RData files to be appended later)
-            process = subprocess.Popen(cmd)
+            process = self.run_r_script(i,
+                                        script_name,
+                                        input_name,
+                                        output_name)
             processes.append(process)
             i += 1
         
         for process in processes:
             process.wait()
-            
-            toc = time.clock()
-            print(toc - tic)
+        
         return None
     
     def r_extract(self):
+        '''
+        This R script could technically be combined with the r_detect one,
+        but it was easier/more flexible to keep them separate when writing
+        '''
         os.makedirs(self.working_dir + '\\figures', exist_ok=True)
-        r_detect()
+        self.r_detect()
+        
+        processes = []
+        for i in range(0, self.num_cores):
+            script_name ='\\results_extract.R'
+            input_name = "r_intermediate_%s.RData" % (i)
+            output_name = "r_output_%s.csv" % (i)
+            
+            process = self.run_r_script(i,
+                                        script_name,
+                                        input_name,
+                                        output_name,
+                                        os.getcwd())
+            processes.append(process)
+        
+        for process in processes:
+            process.wait()
         
         return None
+    
+    def detect_change(self):
+        '''
+        Runs r_extract and combines R outputs into a single pd dataframe
+        '''
+        self.r_extract()
+        files = glob.glob(os.path.join(self.working_dir, 'r_output_*.csv'))
+        df_to_concat = (pd.read_csv(f) for f in files)
+        df = pd.concat(df_to_concat)
+        df = df.drop('Unnamed: 0',axis=1)
+        df['name'] = df['name'].str.lstrip('ratio_quantity.')
+        df = df.set_index('name')
+        return df

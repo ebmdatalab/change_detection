@@ -10,10 +10,6 @@ setwd(arguments[1]) ### Set working directory
 ########################
 ####### Load required packages (install needed first time)
 #######################
-#install.packages("zoo", repos = "http://cran.us.r-project.org")
-#install.packages("caTools", repos = "http://cran.us.r-project.org")
-#install.packages("gets", repos = "https://CRAN.R-project.org")
-
 library(caTools)
 library(gets) ### main package for break detection - see Pretis, Reade, and Sucarrat, Journal of Stat. Software, in press.
 
@@ -82,5 +78,4 @@ withCallingHandlers({
 #save(result.list, file=arguments[3])
 save.image(file=arguments[3])
 
-#length(append(result.list, result.list))
 print("Break detection done")

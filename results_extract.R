@@ -5,6 +5,7 @@ library(gets) ### main package for break detection - see Pretis, Reade, and Suca
 
 ##### Retrive arguments from Python command
 arguments <- commandArgs(trailingOnly = TRUE)
+
 ###################################################################
 #######################################
 ########### B: Extract Trend-Break Results
@@ -29,7 +30,7 @@ source(paste(arguments[4], "\\trend_isat_functions.R", sep = ""))
 ###################
 
 saveplots_analysis <- TRUE ###save plots of output of analysis
-fig_path_tis_analysis <- paste(arguments[4], "/data/chemical_per_list_size/figures/", sep = "") ###set path to store analysis figures
+fig_path_tis_analysis <- paste(arguments[1], "/figures/", sep = "") ###set path to store analysis figures
 
 ###### Timing Measures
 known.t <- 0 ### Time of known intervention in the sample, e.g. medication became available as generic at observation t=18
