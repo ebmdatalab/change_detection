@@ -4,7 +4,6 @@ print("Change detection running...")
 arguments <- commandArgs(trailingOnly = TRUE)
 
 #rm(list = ls())  #clear the workspace
-#setwd("C:/Users/Alex/Documents/GitHub/prescribing_change_metrics/data/chemical_per_list_size")
 setwd(arguments[1]) ### Set working directory
 
 ########################
@@ -20,7 +19,7 @@ library(gets) ### main package for break detection - see Pretis, Reade, and Suca
 plot_show <- FALSE ###show plots during break detection
 
 #### Break detection calibration
-p_alpha <- 0.0001 ## level of significance for the detection of breaks (main calibration choice)
+p_alpha <- 0.0000001 ## level of significance for the detection of breaks (main calibration choice)
 
 ### Computational
 parallel <- NULL ### set as integer (=number of cores-1) if selection should run in parallel (may increase speed for longer time series)
@@ -56,13 +55,14 @@ withCallingHandlers({
     
   {
     
-    print(paste(round((i / vars)*100,1), "%"))
-    #print(names.rel[i])
+    #print(paste(round((i / vars)*100,1), "%"))
+    print(names.rel[i])
+    print(data.pick[names.rel[i]])
     y <- as.matrix(data.pick[names.rel[i]])
     
     ###############################################
     ###Main Break Detection Function (tis=TRUE searches for trend breaks) - called from "gets" package
-    islstr.res <- isat(y, t.pval=p_alpha, sis = FALSE, tis = TRUE, iis = FALSE, plot=plot_show, parallel.options = parallel)
+    islstr.res <- isat(y, t.pval=p_alpha, sis = FALSE, tis = TRUE, iis = FALSE, plot=plot_show, parallel.options = parallel, max.block.size = 15)
     ##########################################
     
     result.list[i] <- list(islstr.res)

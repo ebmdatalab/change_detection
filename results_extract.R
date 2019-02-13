@@ -14,16 +14,17 @@ arguments <- commandArgs(trailingOnly = TRUE)
 
 #rm(list = ls())  #clear the workspace
 
-#setwd("C:\\Users\\ajwalker\\Documents\\GitHub\\prescribing_change_metrics\\data\\chemical_per_list_size") # for testing only
+#setwd("C:\\Users\\ajwalker\\Documents\\GitHub\\prescribing_change_metrics\\data\\testing") # for testing only
 setwd(arguments[1])
 
-#load("r_output_2.RData")
+#load("r_intermediate_2.RData")
 load(arguments[2])
 vars.list <- length(result.list)
 
 #### additional source code for trend functions for analysis
 arguments <- commandArgs(trailingOnly = TRUE)
 source(paste(arguments[4], "\\trend_isat_functions.R", sep = ""))
+#source("C:\\Users\\ajwalker\\Documents\\GitHub\\prescribing_change_metrics\\trend_isat_functions.R")
 
 ####################
 ########## Calibration of Analysis
@@ -31,6 +32,7 @@ source(paste(arguments[4], "\\trend_isat_functions.R", sep = ""))
 
 saveplots_analysis <- TRUE ###save plots of output of analysis
 fig_path_tis_analysis <- paste(arguments[1], "/figures/", sep = "") ###set path to store analysis figures
+#fig_path_tis_analysis <- "C:\\Users\\ajwalker\\Documents\\GitHub\\prescribing_change_metrics\\data\\testing\\figures\\" ###set path to store analysis figures
 
 ###### Timing Measures
 known.t <- 0 ### Time of known intervention in the sample, e.g. medication became available as generic at observation t=18
@@ -226,13 +228,15 @@ for (i in 1:(vars.list))
       
       
       big.break.index <- which(round(tis.path$coef.var$coef, digits = 4)==round(slopeval, digits = 4))
+      
       #### Save analysis plots      
       if (saveplots_analysis){
         filename <- paste(fig_path_tis_analysis, results$name[i], ".png", sep="")
         wid <- 500
         hei <- 500
         par(mfrow=c(1,1))
-        plot(islstr.res$aux$y, col="black", ylab="Proportion of chemical within paragraph", xlab="Time series months", type="l") ##
+        png(filename)
+        plot(islstr.res$aux$y, col="black", ylab="Numerator over denominator", xlab="Time series months", type="l") ##
         abline(h=fit.res[is.first.neg.pknown-1], lty=3, col="purple", lwd=2)### start value
         abline(h=fit.res[NROW(fit.res)], lty=3, col="purple", lwd=2)### end value
         lines(coef.p+mconst.res,  col="red", lwd=2) ###fitted lines
@@ -243,9 +247,8 @@ for (i in 1:(vars.list))
         }
         #abline(v=known.t, lty=1, col="blue", lwd=2)### known intervention, blue dottedwarnings()
         
-        
         dev.copy(png,filename=filename, width=wid, height=hei)
-        dev.off()  
+        dev.off()
       }
       
       ###Store Slope Results
@@ -255,8 +258,6 @@ for (i in 1:(vars.list))
       
     }
     
-    #big.break.index <- which(round(tis.path$coef.var$coef, digits = 4)==round(slopeval, digits = 4)) #which(tis.path$coef.var$coef==slopeval)
-    #results$is.tfirstneg.big[i] <- tdates[min(big.break.index)]
     big.break <- is.first.neg.pknown+slopindex-1 ### which(round(tis.path$coef.var$coef, digits = 4)==round(slopeval, digits = 4))
     results$is.tfirstneg.big[i] <- big.break
     
@@ -264,10 +265,6 @@ for (i in 1:(vars.list))
     #############################################
     ##### Measure 3: Magnitude of Change
     ################################################
-    
-    # start.lev <- is.first.neg.pknown-1
-    # init.lev <- fit.res[start.lev-1]
-    # end.lev <- fit.res[NROW(fit.res)]
     
     start.lev <- is.first.neg.pknown-1
     init.lev <- fit.res[start.lev]

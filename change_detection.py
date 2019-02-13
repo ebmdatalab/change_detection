@@ -4,6 +4,7 @@ import os
 import subprocess
 import multiprocessing
 import glob
+from ebmdatalab import bq
 
 
 def install_r_packages():
@@ -36,22 +37,18 @@ class ChangeDetection(object):
         self.working_dir = os.getcwd() + "\\data\\" + self.name
         os.makedirs(self.working_dir, exist_ok=True)
         
-    def run_query(self):
-        self.data = pd.read_gbq(self.query,
-                                dialect='standard',
-                                project_id='ebmdatalab')
-        return self.data
-    
     def shape_dataframe(self):
-        input_df = self.run_query()
+        input_df = bq.cached_read(
+                self.query,
+                csv_path='bq_cache.csv')
         input_df = input_df.sort_values(['code','month'])
-        input_df['ratio'] = input_df['numerator']/(input_df['denominator']/1000)
+        input_df['ratio'] = input_df['numerator']/(input_df['denominator'])
         input_df['code'] = 'ratio_quantity.' + input_df['code'] ## R script requires this header format
         input_df = input_df.set_index(['month','code'])
         
         ## drop small numbers
-        mask = (input_df['numerator']>50) & (input_df['denominator']>1000)
-        input_df = input_df.loc[mask]
+        #mask = (input_df['numerator']>50) & (input_df['denominator']>1000)
+        #input_df = input_df.loc[mask]
         input_df = input_df.drop(columns=['numerator','denominator'])
         
         ## unstack
