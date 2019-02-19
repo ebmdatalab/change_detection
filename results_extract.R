@@ -107,13 +107,13 @@ for (i in 1:(vars.list))
     fit.res <- fitted(islstr.res) ##fitted values
     
     #### Measure 1.1: the first negative break where the coefficient path is also downward sloping
-    #is.first.neg <- min(which(tis.path$indic.fit$coef < 0))
-    is.first.neg <- min(which(tis.path$indic.fit$coef != 0))
+    is.first.neg <- min(which(tis.path$indic.fit$coef < 0))
+    #is.first.neg <- min(which(tis.path$indic.fit$coef != 0))
     results$is.tfirstneg[i] <- is.first.neg
     
     ### Measure 1.2: first negative break after the known break-date intervention
-    #is.first.neg.pknown <- min( tdates[which(tis.path$indic.fit$coef[tdates] < 0)][tdates[which(tis.path$indic.fit$coef[tdates] < 0)] > known.t] )
-    is.first.neg.pknown <- min( tdates[which(tis.path$indic.fit$coef[tdates] != 0)][tdates[which(tis.path$indic.fit$coef[tdates] != 0)] > known.t] )
+    is.first.neg.pknown <- min( tdates[which(tis.path$indic.fit$coef[tdates] < 0)][tdates[which(tis.path$indic.fit$coef[tdates] < 0)] > known.t] )
+    #is.first.neg.pknown <- min( tdates[which(tis.path$indic.fit$coef[tdates] != 0)][tdates[which(tis.path$indic.fit$coef[tdates] != 0)] > known.t] )
     results$is.tfirstneg.pknown[i] <- is.first.neg.pknown
     
     #### Measure 1.3: the first negative break where there is no subsequent offset of at least break.t.lim 
@@ -160,11 +160,13 @@ for (i in 1:(vars.list))
     } 
     
     ### Store first negative break which is not offset and which occurs after known break date
-    is.first.neg.pknown.offs <- min(tdates[rel.coef != 0 & tdates >= known.t & tis.path$indic.fit$coef[tdates] != 0 & offset == FALSE])
+    is.first.neg.pknown.offs <- min(tdates[rel.coef < 0 & tdates >= known.t & tis.path$indic.fit$coef[tdates] < 0 & offset == FALSE])
+    #is.first.neg.pknown.offs <- min(tdates[rel.coef != 0 & tdates >= known.t & tis.path$indic.fit$coef[tdates] != 0 & offset == FALSE])
     results$is.tfirstneg.pknown.offs[i] <- is.first.neg.pknown.offs
     
     ### Store first negative break which is not offset  (regardless of known break date)
-    is.first.neg.offs <- min(tdates[rel.coef != 0  & tis.path$indic.fit$coef[tdates] != 0 & offset == FALSE])
+    is.first.neg.offs <- min(tdates[rel.coef < 0  & tis.path$indic.fit$coef[tdates] < 0 & offset == FALSE])
+    #is.first.neg.offs <- min(tdates[rel.coef != 0  & tis.path$indic.fit$coef[tdates] != 0 & offset == FALSE])
     results$is.tfirstneg.offs[i] <- is.first.neg.offs
     
     #############################################
@@ -229,35 +231,13 @@ for (i in 1:(vars.list))
       
       big.break.index <- which(round(tis.path$coef.var$coef, digits = 4)==round(slopeval, digits = 4))
       
-      #### Save analysis plots      
-      if (saveplots_analysis){
-        filename <- paste(fig_path_tis_analysis, results$name[i], ".png", sep="")
-        wid <- 500
-        hei <- 500
-        par(mfrow=c(1,1))
-        png(filename)
-        plot(islstr.res$aux$y, col="black", ylab="Numerator over denominator", xlab="Time series months", type="l") ##
-        abline(h=fit.res[is.first.neg.pknown-1], lty=3, col="purple", lwd=2)### start value
-        abline(h=fit.res[NROW(fit.res)], lty=3, col="purple", lwd=2)### end value
-        lines(coef.p+mconst.res,  col="red", lwd=2) ###fitted lines
-        lines(coef.p.hl+mconst.res, col=rgb(red = 1, green = 0.4118, blue = 0, alpha = 0.5), lwd=15) ###section used to evaluate slope
-        #print(big.break.index)
-        if (length(big.break.index) != 0){
-          abline(v=tdates[min(big.break.index)], lty=2, col="blue", lwd=2) ## first negative break after intervention which is not off-set
-        }
-        #abline(v=known.t, lty=1, col="blue", lwd=2)### known intervention, blue dottedwarnings()
-        
-        dev.copy(png,filename=filename, width=wid, height=hei)
-        dev.off()
-      }
-      
       ###Store Slope Results
       results$is.slope.ma[i] <- slopeval    #slope over the contiguous segment
       results$is.slope.ma.prop[i] <- slopeval/predrop #slope over the contiguous segment as proportion of prior level
       results$is.slope.ma.prop.lev[i] <- grid_prop[slopindex,min_index ] #percentage of total drop that the contiguous segment contributes
       
     }
-    
+        
     big.break <- is.first.neg.pknown+slopindex-1 ### which(round(tis.path$coef.var$coef, digits = 4)==round(slopeval, digits = 4))
     results$is.tfirstneg.big[i] <- big.break
     
@@ -279,6 +259,32 @@ for (i in 1:(vars.list))
     print(paste(round((i / vars)*100,1), "%"))
   } ## if there are breaks closed
   
+  #### Save analysis plots      
+  if (saveplots_analysis){
+    filename <- paste(fig_path_tis_analysis, results$name[i], ".png", sep="")
+    wid <- 500
+    hei <- 500
+    par(mfrow=c(1,1))
+    png(filename)
+    plot(islstr.res$aux$y, col="black", ylab="Numerator over denominator", xlab="Time series months", type="l") ##
+    trendline <- tis.path$indic.fit$indic.fit+islstr.res$coefficients[islstr.res$specific.spec["mconst"]]
+    lines(trendline,  col="red", lwd=2) ###fitted lines
+    if (nbreak > 0){
+      abline(h=fit.res[is.first.neg.pknown-1], lty=3, col="purple", lwd=2)### start value
+      abline(h=fit.res[NROW(fit.res)], lty=3, col="purple", lwd=2)### end value
+      lines(coef.p.hl+mconst.res, col=rgb(red = 1, green = 0.4118, blue = 0, alpha = 0.5), lwd=15) ###section used to evaluate slope
+      #print(big.break.index)
+      if (length(big.break.index) != 0){
+        abline(v=tdates[min(big.break.index)], lty=2, col="blue", lwd=2) ## first negative break after intervention which is not off-set
+      }
+    }
+    #abline(v=known.t, lty=1, col="blue", lwd=2)### known intervention, blue dottedwarnings()
+    
+    print(names.rel[i])
+    dev.copy(png,filename=filename, width=wid, height=hei)
+    dev.off()
+  }
+
 } #loop over i closed 
 
 write.csv(results, file = arguments[3])

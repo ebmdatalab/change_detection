@@ -19,7 +19,7 @@ library(gets) ### main package for break detection - see Pretis, Reade, and Suca
 plot_show <- FALSE ###show plots during break detection
 
 #### Break detection calibration
-p_alpha <- 0.0000001 ## level of significance for the detection of breaks (main calibration choice)
+p_alpha <- 0.000001 ## level of significance for the detection of breaks (main calibration choice)
 
 ### Computational
 parallel <- NULL ### set as integer (=number of cores-1) if selection should run in parallel (may increase speed for longer time series)
@@ -55,9 +55,8 @@ withCallingHandlers({
     
   {
     
-    #print(paste(round((i / vars)*100,1), "%"))
     print(names.rel[i])
-    print(data.pick[names.rel[i]])
+    print(paste(round((i / vars)*100,1), "%"))
     y <- as.matrix(data.pick[names.rel[i]])
     
     ###############################################

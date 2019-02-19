@@ -6,6 +6,12 @@ import multiprocessing
 import glob
 from ebmdatalab import bq
 
+'''
+still need to:
+    - implement missing data pass through (see Felix email)
+    - make sample function optional
+'''
+
 
 def install_r_packages():
     '''
@@ -26,12 +32,13 @@ class ChangeDetection(object):
         - file must have suffix ".sql"
         - but not the name.
     '''
-    def __init__(self, name):
+    def __init__(self, name, verbose=False):
         query = 'queries/' + name + '.sql'
         with open(query) as q:
             self.query = q.read()
         self.name = name
         self.num_cores = multiprocessing.cpu_count()
+        self.verbose = verbose
         
         ## Create dir for results
         self.working_dir = os.getcwd() + "\\data\\" + self.name
@@ -70,6 +77,9 @@ class ChangeDetection(object):
         input_df.index = input_df.index - pd.Timestamp("1970-01-01")
         input_df.index = input_df.index // pd.Timedelta('1s')
         
+        ## Select random sample
+        input_df = input_df.sample(n=100, random_state=1234, axis=1)
+        
         return input_df
     
     def run_r_script(self, i, script_name, input_name, output_name, *args):
@@ -89,7 +99,11 @@ class ChangeDetection(object):
 
         ## run the command (results stored as RData files to be appended later)
         if i==0:
-            return subprocess.Popen(cmd + arguments, stderr=subprocess.DEVNULL)
+            if self.verbose:
+                return subprocess.Popen(cmd + arguments)
+            else:
+                return subprocess.Popen(cmd + arguments,
+                                        stderr=subprocess.DEVNULL)
         else:
             return subprocess.Popen(cmd + arguments,
                                     stderr=subprocess.DEVNULL,
