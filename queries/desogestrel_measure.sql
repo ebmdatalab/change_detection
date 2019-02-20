@@ -22,5 +22,5 @@ GROUP BY
 ORDER BY
   practice,
   month
-LIMIT
-  3000
+--LIMIT
+  --3000

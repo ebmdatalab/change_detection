@@ -9,7 +9,7 @@ from ebmdatalab import bq
 '''
 still need to:
     - implement missing data pass through (see Felix email)
-    - make sample function optional
+    - add argument to search for up/down/both changes
 '''
 
 
@@ -32,22 +32,28 @@ class ChangeDetection(object):
         - file must have suffix ".sql"
         - but not the name.
     '''
-    def __init__(self, name, verbose=False):
+    def __init__(self,
+                 name,
+                 verbose=False,
+                 direction="both",
+                 sample=False):
+        
         query = 'queries/' + name + '.sql'
         with open(query) as q:
             self.query = q.read()
         self.name = name
         self.num_cores = multiprocessing.cpu_count()
         self.verbose = verbose
+        self.direction = direction
+        self.sample = sample
         
         ## Create dir for results
-        self.working_dir = os.getcwd() + "\\data\\" + self.name
+        self.working_dir = os.path.join(os.getcwd(),'data',self.name)
         os.makedirs(self.working_dir, exist_ok=True)
         
     def shape_dataframe(self):
-        input_df = bq.cached_read(
-                self.query,
-                csv_path='bq_cache.csv')
+        csv_path = os.path.join(self.working_dir,'bq_cache.csv')
+        input_df = bq.cached_read(self.query,csv_path=csv_path)
         input_df = input_df.sort_values(['code','month'])
         input_df['ratio'] = input_df['numerator']/(input_df['denominator'])
         input_df['code'] = 'ratio_quantity.' + input_df['code'] ## R script requires this header format
@@ -78,7 +84,8 @@ class ChangeDetection(object):
         input_df.index = input_df.index // pd.Timedelta('1s')
         
         ## Select random sample
-        input_df = input_df.sample(n=100, random_state=1234, axis=1)
+        if self.sample:
+            input_df = input_df.sample(n=100, random_state=1234, axis=1)
         
         return input_df
     
@@ -148,7 +155,7 @@ class ChangeDetection(object):
         but it was easier/more flexible to keep them separate when writing
         '''
         os.makedirs(self.working_dir + '\\figures', exist_ok=True)
-        self.r_detect()
+        #self.r_detect()
         
         processes = []
         for i in range(0, self.num_cores):
@@ -160,6 +167,7 @@ class ChangeDetection(object):
                                         script_name,
                                         input_name,
                                         output_name,
+                                        self.direction,
                                         os.getcwd())
             processes.append(process)
         

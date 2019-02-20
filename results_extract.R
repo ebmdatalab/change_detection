@@ -21,9 +21,12 @@ setwd(arguments[1])
 load(arguments[2])
 vars.list <- length(result.list)
 
-#### additional source code for trend functions for analysis
+#### argument for detecting up/down/both changes ####
 arguments <- commandArgs(trailingOnly = TRUE)
-source(paste(arguments[4], "\\trend_isat_functions.R", sep = ""))
+updownboth <- arguments[4]
+
+#### additional source code for trend functions for analysis
+source(paste(arguments[5], "\\trend_isat_functions.R", sep = ""))
 #source("C:\\Users\\ajwalker\\Documents\\GitHub\\prescribing_change_metrics\\trend_isat_functions.R")
 
 ####################
@@ -56,6 +59,11 @@ results$is.tfirstneg.pknown <- NA  ### First negative break after a known interv
 results$is.tfirstneg.pknown.offs <- NA  ### First negative break after a known intervention date not offset by a XX% increase
 results$is.tfirstneg.offs <- NA  ###First negative break not offset by a XX% increase
 results$is.tfirstneg.big <- NA ###steepest break as identified by is.slope.ma
+#results$is.tfirstpos <- NA ### First negative break
+#results$is.tfirstpos.pknown <- NA  ### First negative break after a known intervention date
+#results$is.tfirstpos.pknown.offs <- NA  ### First negative break after a known intervention date not offset by a XX% increase
+#results$is.tfirstpos.offs <- NA  ###First negative break not offset by a XX% increase
+#results$is.tfirstpos.big <- NA ###steepest break as identified by is.slope.ma
 
 ### Slope Measures
 results$is.slope.ma <- NA ### Average slope over steepest segment contributing at least XX% of total drop
@@ -106,14 +114,13 @@ for (i in 1:(vars.list))
     mconst.res <- islstr.res$coefficients[islstr.res$specific.spec["mconst"]]
     fit.res <- fitted(islstr.res) ##fitted values
     
-    #### Measure 1.1: the first negative break where the coefficient path is also downward sloping
+    #### Measure 1.1: the first breaks where the coefficient path is also downward sloping
+    #is.first.pos <- min(which(tis.path$indic.fit$coef > 0))
     is.first.neg <- min(which(tis.path$indic.fit$coef < 0))
-    #is.first.neg <- min(which(tis.path$indic.fit$coef != 0))
     results$is.tfirstneg[i] <- is.first.neg
     
     ### Measure 1.2: first negative break after the known break-date intervention
-    is.first.neg.pknown <- min( tdates[which(tis.path$indic.fit$coef[tdates] < 0)][tdates[which(tis.path$indic.fit$coef[tdates] < 0)] > known.t] )
-    #is.first.neg.pknown <- min( tdates[which(tis.path$indic.fit$coef[tdates] != 0)][tdates[which(tis.path$indic.fit$coef[tdates] != 0)] > known.t] )
+    is.first.neg.pknown <- min( tdates[which(tis.path$indic.fit$coef[tdates] != 0)][tdates[which(tis.path$indic.fit$coef[tdates] != 0)] > known.t] )
     results$is.tfirstneg.pknown[i] <- is.first.neg.pknown
     
     #### Measure 1.3: the first negative break where there is no subsequent offset of at least break.t.lim 
@@ -158,15 +165,13 @@ for (i in 1:(vars.list))
     } else {
       offset <- FALSE 
     } 
-    
+    ############ FUTURE - ADD IN OFFSETS *BEFORE* BREAK TOO ###############
     ### Store first negative break which is not offset and which occurs after known break date
-    is.first.neg.pknown.offs <- min(tdates[rel.coef < 0 & tdates >= known.t & tis.path$indic.fit$coef[tdates] < 0 & offset == FALSE])
-    #is.first.neg.pknown.offs <- min(tdates[rel.coef != 0 & tdates >= known.t & tis.path$indic.fit$coef[tdates] != 0 & offset == FALSE])
+    is.first.neg.pknown.offs <- min(tdates[rel.coef != 0 & tdates >= known.t & tis.path$indic.fit$coef[tdates] != 0 & offset == FALSE])
     results$is.tfirstneg.pknown.offs[i] <- is.first.neg.pknown.offs
     
     ### Store first negative break which is not offset  (regardless of known break date)
-    is.first.neg.offs <- min(tdates[rel.coef < 0  & tis.path$indic.fit$coef[tdates] < 0 & offset == FALSE])
-    #is.first.neg.offs <- min(tdates[rel.coef != 0  & tis.path$indic.fit$coef[tdates] != 0 & offset == FALSE])
+    is.first.neg.offs <- min(tdates[rel.coef != 0  & tis.path$indic.fit$coef[tdates] != 0 & offset == FALSE])
     results$is.tfirstneg.offs[i] <- is.first.neg.offs
     
     #############################################
@@ -264,8 +269,8 @@ for (i in 1:(vars.list))
     filename <- paste(fig_path_tis_analysis, results$name[i], ".png", sep="")
     wid <- 500
     hei <- 500
-    par(mfrow=c(1,1))
     png(filename)
+    par(mfrow=c(1,1))
     plot(islstr.res$aux$y, col="black", ylab="Numerator over denominator", xlab="Time series months", type="l") ##
     trendline <- tis.path$indic.fit$indic.fit+islstr.res$coefficients[islstr.res$specific.spec["mconst"]]
     lines(trendline,  col="red", lwd=2) ###fitted lines
@@ -282,6 +287,7 @@ for (i in 1:(vars.list))
     
     print(names.rel[i])
     dev.copy(png,filename=filename, width=wid, height=hei)
+    dev.off()
     dev.off()
   }
 
