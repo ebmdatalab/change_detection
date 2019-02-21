@@ -272,7 +272,7 @@ for (i in 1:(vars.list))
     plot(islstr.res$aux$y, col="black", ylab="Numerator over denominator", xlab="Time series months", type="l") ##
     trendline <- tis.path$indic.fit$indic.fit+islstr.res$coefficients[islstr.res$specific.spec["mconst"]]
     lines(trendline,  col="red", lwd=2) ###fitted lines
-    if (!is.first.neg==Inf){
+    if (nbreak > 0) { #(!is.first.neg.pknown==Inf){
       abline(h=fit.res[is.first.neg.pknown-1], lty=3, col="purple", lwd=2)### start value
       abline(h=fit.res[NROW(fit.res)], lty=3, col="purple", lwd=2)### end value
       lines(coef.p.hl+mconst.res, col=rgb(red = 1, green = 0.4118, blue = 0, alpha = 0.5), lwd=15) ###section used to evaluate slope
