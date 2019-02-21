@@ -21,12 +21,10 @@ setwd(arguments[1])
 load(arguments[2])
 vars.list <- length(result.list)
 
-#### argument for detecting up/down/both changes ####
 arguments <- commandArgs(trailingOnly = TRUE)
-updownboth <- arguments[4]
 
 #### additional source code for trend functions for analysis
-source(paste(arguments[5], "\\trend_isat_functions.R", sep = ""))
+source(paste(arguments[4], "\\trend_isat_functions.R", sep = ""))
 #source("C:\\Users\\ajwalker\\Documents\\GitHub\\prescribing_change_metrics\\trend_isat_functions.R")
 
 ####################
@@ -120,7 +118,7 @@ for (i in 1:(vars.list))
     results$is.tfirstneg[i] <- is.first.neg
     
     ### Measure 1.2: first negative break after the known break-date intervention
-    is.first.neg.pknown <- min( tdates[which(tis.path$indic.fit$coef[tdates] != 0)][tdates[which(tis.path$indic.fit$coef[tdates] != 0)] > known.t] )
+    is.first.neg.pknown <- min( tdates[which(tis.path$indic.fit$coef[tdates] < 0)][tdates[which(tis.path$indic.fit$coef[tdates] < 0)] > known.t] )
     results$is.tfirstneg.pknown[i] <- is.first.neg.pknown
     
     #### Measure 1.3: the first negative break where there is no subsequent offset of at least break.t.lim 
@@ -167,18 +165,18 @@ for (i in 1:(vars.list))
     } 
     ############ FUTURE - ADD IN OFFSETS *BEFORE* BREAK TOO ###############
     ### Store first negative break which is not offset and which occurs after known break date
-    is.first.neg.pknown.offs <- min(tdates[rel.coef != 0 & tdates >= known.t & tis.path$indic.fit$coef[tdates] != 0 & offset == FALSE])
+    is.first.neg.pknown.offs <- min(tdates[rel.coef < 0 & tdates >= known.t & tis.path$indic.fit$coef[tdates] < 0 & offset == FALSE])
     results$is.tfirstneg.pknown.offs[i] <- is.first.neg.pknown.offs
     
     ### Store first negative break which is not offset  (regardless of known break date)
-    is.first.neg.offs <- min(tdates[rel.coef != 0  & tis.path$indic.fit$coef[tdates] != 0 & offset == FALSE])
+    is.first.neg.offs <- min(tdates[rel.coef < 0  & tis.path$indic.fit$coef[tdates] < 0 & offset == FALSE])
     results$is.tfirstneg.offs[i] <- is.first.neg.offs
     
     #############################################
     ##### Measure 2 Steepness/Slope: average slope of the steepest contiguous segment contributing to at least XX% of the total level change
     ################################################
-    
-    if (!is.first.neg.pknown==Inf)  #first break not to lie before the known break date
+#    print(!is.first.neg==Inf)
+    if (!is.first.neg==Inf)  #first break not to lie before the known break date
     {
       
       coefp.dif <- tis.path$indic.fit$coef
@@ -241,10 +239,10 @@ for (i in 1:(vars.list))
       results$is.slope.ma.prop[i] <- slopeval/predrop #slope over the contiguous segment as proportion of prior level
       results$is.slope.ma.prop.lev[i] <- grid_prop[slopindex,min_index ] #percentage of total drop that the contiguous segment contributes
       
+      ###Biggest break
+      big.break <- is.first.neg.pknown+slopindex-1 ### which(round(tis.path$coef.var$coef, digits = 4)==round(slopeval, digits = 4))
+      results$is.tfirstneg.big[i] <- big.break      
     }
-        
-    big.break <- is.first.neg.pknown+slopindex-1 ### which(round(tis.path$coef.var$coef, digits = 4)==round(slopeval, digits = 4))
-    results$is.tfirstneg.big[i] <- big.break
     
     
     #############################################
@@ -274,7 +272,7 @@ for (i in 1:(vars.list))
     plot(islstr.res$aux$y, col="black", ylab="Numerator over denominator", xlab="Time series months", type="l") ##
     trendline <- tis.path$indic.fit$indic.fit+islstr.res$coefficients[islstr.res$specific.spec["mconst"]]
     lines(trendline,  col="red", lwd=2) ###fitted lines
-    if (nbreak > 0){
+    if (!is.first.neg==Inf){
       abline(h=fit.res[is.first.neg.pknown-1], lty=3, col="purple", lwd=2)### start value
       abline(h=fit.res[NROW(fit.res)], lty=3, col="purple", lwd=2)### end value
       lines(coef.p.hl+mconst.res, col=rgb(red = 1, green = 0.4118, blue = 0, alpha = 0.5), lwd=15) ###section used to evaluate slope

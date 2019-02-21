@@ -35,7 +35,6 @@ class ChangeDetection(object):
     def __init__(self,
                  name,
                  verbose=False,
-                 direction="both",
                  sample=False):
         
         query = 'queries/' + name + '.sql'
@@ -44,7 +43,6 @@ class ChangeDetection(object):
         self.name = name
         self.num_cores = multiprocessing.cpu_count()
         self.verbose = verbose
-        self.direction = direction
         self.sample = sample
         
         ## Create dir for results
@@ -104,8 +102,8 @@ class ChangeDetection(object):
         for arg in args:
             arguments.append(arg)
 
-        ## run the command (results stored as RData files to be appended later)
-        if i==0:
+        ## run the command
+        if i==2:
             if self.verbose:
                 return subprocess.Popen(cmd + arguments)
             else:
@@ -155,7 +153,7 @@ class ChangeDetection(object):
         but it was easier/more flexible to keep them separate when writing
         '''
         os.makedirs(self.working_dir + '\\figures', exist_ok=True)
-        #self.r_detect()
+        self.r_detect()
         
         processes = []
         for i in range(0, self.num_cores):
@@ -167,7 +165,6 @@ class ChangeDetection(object):
                                         script_name,
                                         input_name,
                                         output_name,
-                                        self.direction,
                                         os.getcwd())
             processes.append(process)
         
