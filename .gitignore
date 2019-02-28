@@ -2,3 +2,6 @@
 *.tmp
 .ipynb_checkpoints/change_speed_metrics-checkpoint.ipynb
 *.pyc
+*.png
+*.csv
+*.RData
