@@ -260,7 +260,6 @@ for (i in 1:(vars.list))
   #### Save analysis plots      
   if (saveplots_analysis){
     filename <- paste(fig_path_tis_analysis, results$name[i], ".png", sep="")
-    print(filename)
     wid <- 500
     hei <- 500
     png(filename)
@@ -268,18 +267,20 @@ for (i in 1:(vars.list))
     plot(islstr.res$aux$y, col="black", ylab="Numerator over denominator", xlab="Time series months", type="l") ##
     trendline <- tis.path$indic.fit$indic.fit+islstr.res$coefficients[islstr.res$specific.spec["mconst"]]
     lines(trendline,  col="red", lwd=2) ###fitted lines
-    if (!is.first==Inf){
-      abline(h=fit.res[is.first.pknown-1], lty=3, col="purple", lwd=2)### start value
-      abline(h=fit.res[NROW(fit.res)], lty=3, col="purple", lwd=2)### end value
-      lines(coef.p.hl+mconst.res, col=rgb(red = 1, green = 0.4118, blue = 0, alpha = 0.5), lwd=15) ###section used to evaluate slope
-      #print(big.break.index)
-      if (length(big.break.index) != 0){
-        abline(v=tdates[min(big.break.index)], lty=2, col="blue", lwd=2) ## first negative break after intervention which is not off-set
+    if (nbreak > 0){
+        if (!is.first==Inf){
+        abline(h=fit.res[is.first.pknown-1], lty=3, col="purple", lwd=2)### start value
+        abline(h=fit.res[NROW(fit.res)], lty=3, col="purple", lwd=2)### end value
+        lines(coef.p.hl+mconst.res, col=rgb(red = 1, green = 0.4118, blue = 0, alpha = 0.5), lwd=15) ###section used to evaluate slope
+        #print(big.break.index)
+        if (length(big.break.index) != 0){
+          abline(v=tdates[min(big.break.index)], lty=2, col="blue", lwd=2) ## first negative break after intervention which is not off-set
+        }
       }
     }
     #abline(v=known.t, lty=1, col="blue", lwd=2)### known intervention, blue dottedwarnings()
     
-    print(names.rel[i])
+    #print(names.rel[i])
     dev.copy(png,filename=filename, width=wid, height=hei)
     dev.off()
     dev.off()

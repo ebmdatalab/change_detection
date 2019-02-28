@@ -55,7 +55,7 @@ withCallingHandlers({
     
   {
     
-    print(names.rel[i])
+    #print(names.rel[i])
     print(paste(round((i / vars)*100,1), "%"))
     y <- as.matrix(data.pick[names.rel[i]])
     
