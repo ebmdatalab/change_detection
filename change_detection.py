@@ -44,7 +44,8 @@ class ChangeDetection(object):
         self.measure = measure
         
     def create_dir(self):
-        self.working_dir = os.path.join(os.getcwd(), 'data', self.folder_name)
+        folder_name = self.folder_name.replace('%', '')
+        self.working_dir = os.path.join(os.getcwd(), 'data', folder_name)
         os.makedirs(self.working_dir, exist_ok=True)
         os.makedirs(self.working_dir + '\\figures', exist_ok=True)
     
@@ -68,7 +69,7 @@ class ChangeDetection(object):
         q = '''
         SELECT
           month,
-          %s,
+          %s AS code,
           numerator,
           denominator
         FROM
@@ -217,12 +218,12 @@ class ChangeDetection(object):
             for measure_name in measure_list:
                 self.measure_name = measure_name
                 self.folder_name = os.path.join(self.name, measure_name) 
-                self.folder_name = self.name
                 self.create_dir()
                 self.query = self.get_measure_query()
-                #self.r_detect()
-                #self.r_extract()
-                print(self.query)
+                print(self.measure_name)
+                self.r_detect()
+                self.r_extract()
+                
             return None#self.concatenate_output()
         else:
             self.folder_name = self.name

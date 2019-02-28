@@ -52,16 +52,11 @@ results <- data.frame(name=names.rel)
 results$is.nbreak <- NA ### Number of breaks
 
 ### Timing Measures
-results$is.tfirstneg <- NA ### First negative break
-results$is.tfirstneg.pknown <- NA  ### First negative break after a known intervention date
-results$is.tfirstneg.pknown.offs <- NA  ### First negative break after a known intervention date not offset by a XX% increase
-results$is.tfirstneg.offs <- NA  ###First negative break not offset by a XX% increase
-results$is.tfirstneg.big <- NA ###steepest break as identified by is.slope.ma
-#results$is.tfirstpos <- NA ### First negative break
-#results$is.tfirstpos.pknown <- NA  ### First negative break after a known intervention date
-#results$is.tfirstpos.pknown.offs <- NA  ### First negative break after a known intervention date not offset by a XX% increase
-#results$is.tfirstpos.offs <- NA  ###First negative break not offset by a XX% increase
-#results$is.tfirstpos.big <- NA ###steepest break as identified by is.slope.ma
+results$is.tfirst <- NA ### First negative break
+results$is.tfirst.pknown <- NA  ### First negative break after a known intervention date
+results$is.tfirst.pknown.offs <- NA  ### First negative break after a known intervention date not offset by a XX% increase
+results$is.tfirst.offs <- NA  ###First negative break not offset by a XX% increase
+results$is.tfirst.big <- NA ###steepest break as identified by is.slope.ma
 
 ### Slope Measures
 results$is.slope.ma <- NA ### Average slope over steepest segment contributing at least XX% of total drop
@@ -114,12 +109,12 @@ for (i in 1:(vars.list))
     
     #### Measure 1.1: the first breaks where the coefficient path is also downward sloping
     #is.first.pos <- min(which(tis.path$indic.fit$coef > 0))
-    is.first.neg <- min(which(tis.path$indic.fit$coef < 0))
-    results$is.tfirstneg[i] <- is.first.neg
+    is.first <- min(which(tis.path$indic.fit$coef != 0))
+    results$is.tfirst[i] <- is.first
     
     ### Measure 1.2: first negative break after the known break-date intervention
-    is.first.neg.pknown <- min( tdates[which(tis.path$indic.fit$coef[tdates] < 0)][tdates[which(tis.path$indic.fit$coef[tdates] < 0)] > known.t] )
-    results$is.tfirstneg.pknown[i] <- is.first.neg.pknown
+    is.first.pknown <- min( tdates[which(tis.path$indic.fit$coef[tdates] != 0)][tdates[which(tis.path$indic.fit$coef[tdates] != 0)] > known.t] )
+    results$is.tfirst.pknown[i] <- is.first.pknown
     
     #### Measure 1.3: the first negative break where there is no subsequent offset of at least break.t.lim 
     offset <- array(NA, dim=NROW(tdates))
@@ -165,32 +160,32 @@ for (i in 1:(vars.list))
     } 
     ############ FUTURE - ADD IN OFFSETS *BEFORE* BREAK TOO ###############
     ### Store first negative break which is not offset and which occurs after known break date
-    is.first.neg.pknown.offs <- min(tdates[rel.coef < 0 & tdates >= known.t & tis.path$indic.fit$coef[tdates] < 0 & offset == FALSE])
-    results$is.tfirstneg.pknown.offs[i] <- is.first.neg.pknown.offs
+    is.first.pknown.offs <- min(tdates[rel.coef != 0 & tdates >= known.t & tis.path$indic.fit$coef[tdates] != 0 & offset == FALSE])
+    results$is.tfirst.pknown.offs[i] <- is.first.pknown.offs
     
     ### Store first negative break which is not offset  (regardless of known break date)
-    is.first.neg.offs <- min(tdates[rel.coef < 0  & tis.path$indic.fit$coef[tdates] < 0 & offset == FALSE])
-    results$is.tfirstneg.offs[i] <- is.first.neg.offs
+    is.first.offs <- min(tdates[rel.coef != 0  & tis.path$indic.fit$coef[tdates] != 0 & offset == FALSE])
+    results$is.tfirst.offs[i] <- is.first.offs
     
     #############################################
     ##### Measure 2 Steepness/Slope: average slope of the steepest contiguous segment contributing to at least XX% of the total level change
     ################################################
-#    print(!is.first.neg==Inf)
-    if (!is.first.neg==Inf)  #first break not to lie before the known break date
+#    print(!is.first==Inf)
+    if (!is.first==Inf)  #first break not to lie before the known break date
     {
       
       coefp.dif <- tis.path$indic.fit$coef
       const.path <-  tis.path$indic.fit$indic.fit
       
-      first.neg.index <-  which(tdates==is.first.neg.pknown )
-      interval <- const.path[tdates[first.neg.index:length(tdates)]-1]
-      #predrop <- fit.res[is.first.neg.pknown-1] #changed: FP Sept 13th.
-      predrop <- fit.res[is.first.neg.pknown]
+      first.index <-  which(tdates==is.first.pknown )
+      interval <- const.path[tdates[first.index:length(tdates)]-1]
+      #predrop <- fit.res[is.first.pknown-1] #changed: FP Sept 13th.
+      predrop <- fit.res[is.first.pknown]
       
-      #totaldif  <- sum(coefp.dif[(is.first.neg.pknown-1):(NROW(coefp.dif))]) # total drop, change in every period, i.e. the slope #changed: FP Sept 13th.
-      totaldif  <- sum(coefp.dif[(is.first.neg.pknown):(NROW(coefp.dif))]) # total drop, change in every period, i.e. the slope
+      #totaldif  <- sum(coefp.dif[(is.first.pknown-1):(NROW(coefp.dif))]) # total drop, change in every period, i.e. the slope #changed: FP Sept 13th.
+      totaldif  <- sum(coefp.dif[(is.first.pknown):(NROW(coefp.dif))]) # total drop, change in every period, i.e. the slope
       
-      max_interval <- NROW(const.path) - is.first.neg.pknown + 1
+      max_interval <- NROW(const.path) - is.first.pknown + 1
       
       
       grid_sum <- matrix(NA, ncol=max_interval, nrow=max_interval)
@@ -199,8 +194,8 @@ for (i in 1:(vars.list))
       #####Grid Search:
       
       for (j in 1:max_interval){
-        grid_sum[,j] <- runmean(coefp.dif[(is.first.neg.pknown):NROW(coefp.dif)], j, align="left", endrule="NA")*j  #sum over every length (columns) at every point (rows)
-        grid_mean[,j] <-  runmean(coefp.dif[(is.first.neg.pknown):NROW(coefp.dif)], j, align="left", endrule="NA") #take the running mean of the slope, corresponding to the values above
+        grid_sum[,j] <- runmean(coefp.dif[(is.first.pknown):NROW(coefp.dif)], j, align="left", endrule="NA")*j  #sum over every length (columns) at every point (rows)
+        grid_mean[,j] <-  runmean(coefp.dif[(is.first.pknown):NROW(coefp.dif)], j, align="left", endrule="NA") #take the running mean of the slope, corresponding to the values above
         
       }
       
@@ -213,9 +208,9 @@ for (i in 1:(vars.list))
       minslopgrid <- which(grid_prop[,min_index] > slope.lim)
       slopeval <- grid_mean[minslopgrid[which.max(abs(grid_mean[minslopgrid, min_index]))], min_index] ###find the maximum slope, on the shortest interval, that yields over XX% drop
       
-      interval.full <- const.path[c(tdates[first.neg.index:length(tdates)]-1, NROW(const.path))]
+      interval.full <- const.path[c(tdates[first.index:length(tdates)]-1, NROW(const.path))]
       
-      if(length(tdates[first.neg.index:length(tdates)])>1){   #if more than one break
+      if(length(tdates[first.index:length(tdates)])>1){   #if more than one break
         slopindex <- minslopgrid[which.max(abs(grid_mean[minslopgrid, min_index]))]
       } else { #if just one break
         slopindex <- 1   #start at the beginning
@@ -224,11 +219,11 @@ for (i in 1:(vars.list))
       
       coef.p <- const.path
       coefp.dif.hl <- coefp.dif*NA
-      coefp.dif.hl[(is.first.neg.pknown+slopindex-2):((is.first.neg.pknown+slopindex)+min_index-3) ] <- coefp.dif[(is.first.neg.pknown+slopindex-2):((is.first.neg.pknown+slopindex)+min_index-3) ]
+      coefp.dif.hl[(is.first.pknown+slopindex-2):((is.first.pknown+slopindex)+min_index-3) ] <- coefp.dif[(is.first.pknown+slopindex-2):((is.first.pknown+slopindex)+min_index-3) ]
       
       ### Store the part of the slope segment evaluated for plotting
       coef.p.hl <- coef.p*NA
-      coef.p.hl[(is.first.neg.pknown+slopindex-2):((is.first.neg.pknown+slopindex)+min_index-2)] <- const.path[(is.first.neg.pknown+slopindex-2):((is.first.neg.pknown+slopindex)+min_index-2)]
+      coef.p.hl[(is.first.pknown+slopindex-2):((is.first.pknown+slopindex)+min_index-2)] <- const.path[(is.first.pknown+slopindex-2):((is.first.pknown+slopindex)+min_index-2)]
       result.list[[i]]$is.results$coef.p.hl <- coef.p.hl
       
       
@@ -240,8 +235,8 @@ for (i in 1:(vars.list))
       results$is.slope.ma.prop.lev[i] <- grid_prop[slopindex,min_index ] #percentage of total drop that the contiguous segment contributes
       
       ###Biggest break
-      big.break <- is.first.neg.pknown+slopindex-1 ### which(round(tis.path$coef.var$coef, digits = 4)==round(slopeval, digits = 4))
-      results$is.tfirstneg.big[i] <- big.break      
+      big.break <- is.first.pknown+slopindex-1 ### which(round(tis.path$coef.var$coef, digits = 4)==round(slopeval, digits = 4))
+      results$is.tfirst.big[i] <- big.break      
     }
     
     
@@ -249,7 +244,7 @@ for (i in 1:(vars.list))
     ##### Measure 3: Magnitude of Change
     ################################################
     
-    start.lev <- is.first.neg.pknown-1
+    start.lev <- is.first.pknown-1
     init.lev <- fit.res[start.lev]
     end.lev <- fit.res[NROW(fit.res)]
     
@@ -265,6 +260,7 @@ for (i in 1:(vars.list))
   #### Save analysis plots      
   if (saveplots_analysis){
     filename <- paste(fig_path_tis_analysis, results$name[i], ".png", sep="")
+    print(filename)
     wid <- 500
     hei <- 500
     png(filename)
@@ -272,8 +268,8 @@ for (i in 1:(vars.list))
     plot(islstr.res$aux$y, col="black", ylab="Numerator over denominator", xlab="Time series months", type="l") ##
     trendline <- tis.path$indic.fit$indic.fit+islstr.res$coefficients[islstr.res$specific.spec["mconst"]]
     lines(trendline,  col="red", lwd=2) ###fitted lines
-    if (!is.first.neg==Inf){
-      abline(h=fit.res[is.first.neg.pknown-1], lty=3, col="purple", lwd=2)### start value
+    if (!is.first==Inf){
+      abline(h=fit.res[is.first.pknown-1], lty=3, col="purple", lwd=2)### start value
       abline(h=fit.res[NROW(fit.res)], lty=3, col="purple", lwd=2)### end value
       lines(coef.p.hl+mconst.res, col=rgb(red = 1, green = 0.4118, blue = 0, alpha = 0.5), lwd=15) ###section used to evaluate slope
       #print(big.break.index)
