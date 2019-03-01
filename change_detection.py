@@ -199,7 +199,8 @@ class ChangeDetection(object):
             i += 1
         
         for process in processes:
-            process.wait()
+            #process.wait()
+            process.communicate()
     
     def r_extract(self):
         '''
