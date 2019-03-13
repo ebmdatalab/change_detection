@@ -39,7 +39,7 @@ class ChangeDetection(object):
                  measure=False):
         
         self.name = name
-        self.num_cores = cpu_count()
+        self.num_cores = cpu_count() - 1
         self.verbose = verbose
         self.sample = sample
         self.measure = measure
@@ -131,7 +131,8 @@ class ChangeDetection(object):
         
         ## drop columns with all identical values
         cols = input_df.select_dtypes([np.number]).columns
-        std = input_df[cols].std()
+        std = input_df[cols][:-5].std() #added [:-1] to remove ones with
+                                        #one wierd value at the end
         cols_to_drop = std[std == 0].index
         input_df = input_df.drop(cols_to_drop, axis=1)
         
@@ -199,8 +200,9 @@ class ChangeDetection(object):
             i += 1
         
         for process in processes:
-            #process.wait()
-            process.communicate()
+            process.wait()
+            assert process.returncode == 0, \
+              'Change detection process failed %s' % (process.args)
     
     def r_extract(self):
         '''
@@ -222,6 +224,8 @@ class ChangeDetection(object):
         
         for process in processes:
             process.wait()
+            assert process.returncode == 0, \
+              'Results extraction process failed %s' % (process.args)
     
     def concatenate_split_dfs(self):
         files = glob.glob(os.path.join(self.working_dir, 'r_output_*.csv'))
@@ -237,14 +241,18 @@ class ChangeDetection(object):
             for measure_name in self.measure_list:
                 folder_name = os.path.join(self.name, measure_name)
                 self.working_dir = self.get_working_dir(folder_name)
+                out_path = os.path.join(self.working_dir, 'r_output.csv')
+                if ~os.path.exists(out_path):
+                    self.r_detect()
+                    self.r_extract()
+                    self.concatenate_split_dfs()
+        else:
+            self.working_dir = self.get_working_dir(self.name)
+            out_path = os.path.join(self.working_dir, 'r_output.csv')
+            if ~os.path.exists(out_path):
                 self.r_detect()
                 self.r_extract()
                 self.concatenate_split_dfs()
-        else:
-            self.working_dir = self.get_working_dir(self.name)
-            self.r_detect()
-            self.r_extract()
-            self.concatenate_split_dfs()
             
     
     def clear(self):
