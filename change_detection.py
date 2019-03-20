@@ -103,8 +103,16 @@ class ChangeDetection(object):
             bq.cached_read(query, csv_path=csv_path)
         print('All queries done')
     
-    def shape_dataframe(self):
-        csv_path = os.path.join(self.working_dir, 'bq_cache.csv')
+    def shape_dataframe(self, csv_name='bq_cache.csv'):
+        '''
+        Returns data in a dataframe in the format needed for `r_detect()`
+        
+        Args:
+            csv_name: the name of the CSV file to process. The CSV file is 
+            assumed to be located in `self.working_dir`. Default 
+            `bq_cache.csv`
+        '''
+        csv_path = os.path.join(self.working_dir, csv_name)
         while not os.path.exists(csv_path):
             time.sleep(1)
         time.sleep(3)
