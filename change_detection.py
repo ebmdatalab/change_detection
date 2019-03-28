@@ -21,7 +21,7 @@ Installs the following R modules:
 
 def run_r_script(path):
     command = 'Rscript'
-    path2script = os.getcwd() + path
+    path2script = os.path.join(os.getcwd(), path)
     cmd = [command, path2script]
     return subprocess.call(cmd)
 
@@ -50,7 +50,7 @@ class ChangeDetection(object):
     
     def create_dir(self, dir_path):
         os.makedirs(dir_path, exist_ok=True)
-        os.makedirs(dir_path + '\\figures', exist_ok=True)
+        os.makedirs(os.path.join(dir_path, 'figures'), exist_ok=True)
     
     def get_measure_list(self):
         q = '''
@@ -161,7 +161,7 @@ class ChangeDetection(object):
         '''
         ## Define R command
         command = 'Rscript'
-        path2script = os.getcwd() + script_name
+        path2script = os.path.join(os.getcwd(), script_name)
         cmd = [command, path2script]
 
         ## Define arguments to pass to R
@@ -193,12 +193,12 @@ class ChangeDetection(object):
         i = 0
         processes = []
         for item in split_df:
-            script_name = '\\change_detection.R'
+            script_name = 'change_detection.R'
             input_name = "r_input_%s.csv" % (i)
             output_name = "r_intermediate_%s.RData" % (i)
             
             df = pd.DataFrame(item)
-            df.to_csv(self.working_dir + '\\' + input_name)
+            df.to_csv(os.path.join(self.working_dir, input_name))
             
             process = self.run_r_script(i,
                                         script_name,
@@ -219,7 +219,7 @@ class ChangeDetection(object):
         '''
         processes = []
         for i in range(0, self.num_cores):
-            script_name = '\\results_extract.R'
+            script_name = 'results_extract.R'
             input_name = "r_intermediate_%s.RData" % (i)
             output_name = "r_output_%s.csv" % (i)
             
@@ -242,7 +242,7 @@ class ChangeDetection(object):
         df = df.drop('Unnamed: 0', axis=1)
         df['name'] = df['name'].str.lstrip('ratio_quantity.')
         df = df.set_index('name')
-        df.to_csv(self.working_dir + '\\' + 'r_output.csv')
+        df.to_csv(os.path.join(self.working_dir, 'r_output.csv'))
     
     def detect_change(self):
         if self.measure:

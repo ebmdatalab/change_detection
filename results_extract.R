@@ -24,7 +24,7 @@ vars.list <- length(result.list)
 arguments <- commandArgs(trailingOnly = TRUE)
 
 #### additional source code for trend functions for analysis
-source(paste(arguments[4], "\\trend_isat_functions.R", sep = ""))
+source(file.path(arguments[4], "trend_isat_functions.R"))
 #source("C:\\Users\\ajwalker\\Documents\\GitHub\\prescribing_change_metrics\\trend_isat_functions.R")
 
 ####################
