@@ -61,7 +61,32 @@ withCallingHandlers({
     
     ###############################################
     ###Main Break Detection Function (tis=TRUE searches for trend breaks) - called from "gets" package
-    islstr.res <- isat(y, t.pval=p_alpha, sis = FALSE, tis = TRUE, iis = FALSE, plot=plot_show, parallel.options = parallel, max.block.size = 15)
+    if (sum(is.na(y))==0){ ## if there are no missing values
+      islstr.res <- isat(y,
+                         t.pval=p_alpha,
+                         sis = FALSE,
+                         tis = TRUE,
+                         iis = FALSE,
+                         plot=plot_show,
+                         parallel.options = parallel,
+                         max.block.size = 15)
+    } else {
+      ### Create missing value indicator
+      m <- is.na(y)
+      m <- m * 1
+      ### Fill in missing values with arbitrary number
+      y[is.na(y)] <- 99
+      
+      islstr.res <- isat(y,
+                         t.pval=p_alpha,
+                         sis = FALSE,
+                         tis = TRUE,
+                         iis = FALSE,
+                         plot=plot_show,
+                         parallel.options = parallel,
+                         max.block.size = 12,
+                         mxreg = m)
+    }
     ##########################################
     
     result.list[i] <- list(islstr.res)

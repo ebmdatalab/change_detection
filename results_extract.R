@@ -108,12 +108,30 @@ for (i in 1:(vars.list))
     fit.res <- fitted(islstr.res) ##fitted values
     
     #### Measure 1.1: the first breaks where the coefficient path is also downward sloping
-    #is.first.pos <- min(which(tis.path$indic.fit$coef > 0))
-    is.first <- min(which(tis.path$indic.fit$coef != 0))
+    if (arguments[5] == 'both'){
+      direction <- 'min(which(tis.path$indic.fit$coef != 0))'
+    }
+    else if (arguments[5] == 'up'){
+      direction <- 'min(which(tis.path$indic.fit$coef > 0))'
+    }
+    else if (arguments[5] == 'down'){
+      direction <- 'min(which(tis.path$indic.fit$coef < 0))'
+    }
+    is.first <- eval(parse(text=direction)) 
     results$is.tfirst[i] <- is.first
     
     ### Measure 1.2: first negative break after the known break-date intervention
-    is.first.pknown <- min( tdates[which(tis.path$indic.fit$coef[tdates] != 0)][tdates[which(tis.path$indic.fit$coef[tdates] != 0)] > known.t] )
+    if (arguments[5] == 'both'){
+      direction <- 'min( tdates[which(tis.path$indic.fit$coef[tdates] != 0)][tdates[which(tis.path$indic.fit$coef[tdates] != 0)] > known.t] )'
+    }
+    else if (arguments[5] == 'up'){
+      direction <- 'min( tdates[which(tis.path$indic.fit$coef[tdates] > 0)][tdates[which(tis.path$indic.fit$coef[tdates] > 0)] > known.t] )'
+    }
+    else if (arguments[5] == 'down'){
+      direction <- 'min( tdates[which(tis.path$indic.fit$coef[tdates] < 0)][tdates[which(tis.path$indic.fit$coef[tdates] < 0)] > known.t] )'
+    }
+    
+    is.first.pknown <- eval(parse(text=direction))
     results$is.tfirst.pknown[i] <- is.first.pknown
     
     #### Measure 1.3: the first negative break where there is no subsequent offset of at least break.t.lim 
@@ -160,11 +178,31 @@ for (i in 1:(vars.list))
     } 
     ############ FUTURE - ADD IN OFFSETS *BEFORE* BREAK TOO ###############
     ### Store first negative break which is not offset and which occurs after known break date
-    is.first.pknown.offs <- min(tdates[rel.coef != 0 & tdates >= known.t & tis.path$indic.fit$coef[tdates] != 0 & offset == FALSE])
+    if (arguments[5] == 'both'){
+      direction <- 'min(tdates[rel.coef != 0 & tdates >= known.t & tis.path$indic.fit$coef[tdates] != 0 & offset == FALSE])'
+    }
+    else if (arguments[5] == 'up'){
+      direction <- 'min(tdates[rel.coef > 0 & tdates >= known.t & tis.path$indic.fit$coef[tdates] > 0 & offset == FALSE])'
+    }
+    else if (arguments[5] == 'down'){
+      direction <- 'min(tdates[rel.coef < 0 & tdates >= known.t & tis.path$indic.fit$coef[tdates] < 0 & offset == FALSE])'
+    }
+    
+    is.first.pknown.offs <- eval(parse(text=direction))
     results$is.tfirst.pknown.offs[i] <- is.first.pknown.offs
     
     ### Store first negative break which is not offset  (regardless of known break date)
-    is.first.offs <- min(tdates[rel.coef != 0  & tis.path$indic.fit$coef[tdates] != 0 & offset == FALSE])
+    if (arguments[5] == 'both'){
+      direction <- 'min(tdates[rel.coef != 0  & tis.path$indic.fit$coef[tdates] != 0 & offset == FALSE])'
+    }
+    else if (arguments[5] == 'up'){
+      direction <- 'min(tdates[rel.coef > 0  & tis.path$indic.fit$coef[tdates] > 0 & offset == FALSE])'
+    }
+    else if (arguments[5] == 'down'){
+      direction <- 'min(tdates[rel.coef < 0  & tis.path$indic.fit$coef[tdates] < 0 & offset == FALSE])'
+    }
+    
+    is.first.offs <- eval(parse(text=direction))
     results$is.tfirst.offs[i] <- is.first.offs
     
     #############################################
@@ -264,7 +302,8 @@ for (i in 1:(vars.list))
     hei <- 500
     png(filename)
     par(mfrow=c(1,1))
-    plot(islstr.res$aux$y, col="black", ylab="Numerator over denominator", xlab="Time series months", type="l") ##
+    islstr.res$aux$y[islstr.res$aux$y == 99] <- NA
+    plot(islstr.res$aux$y, col="black", ylab="Numerator over denominator", xlab="Time series months", type="l",las=1) ##
     trendline <- tis.path$indic.fit$indic.fit+islstr.res$coefficients[islstr.res$specific.spec["mconst"]]
     lines(trendline,  col="red", lwd=2) ###fitted lines
     if (nbreak > 0){

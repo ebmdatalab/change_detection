@@ -36,13 +36,15 @@ class ChangeDetection(object):
                  name,
                  verbose=False,
                  sample=False,
-                 measure=False):
+                 measure=False,
+                 direction='both'):
         
         self.name = name
         self.num_cores = cpu_count() - 1
         self.verbose = verbose
         self.sample = sample
         self.measure = measure
+        self.direction = direction
         
     def get_working_dir(self, folder):
         folder_name = folder.replace('%', '')
@@ -84,7 +86,7 @@ class ChangeDetection(object):
         query = 'queries/' + self.name + '.sql'
         with open(query) as q:
             return q.read()
-            
+    
     def get_data(self):
         print('Running all queries')
         if self.measure:
@@ -123,9 +125,11 @@ class ChangeDetection(object):
         input_df['code'] = 'ratio_quantity.' + input_df['code'] 
         input_df = input_df.set_index(['month', 'code'])
         
-        ### drop small numbers
-        #mask = (input_df['numerator']>50) & (input_df['denominator']>1000)
+        ## drop small numbers
+        #mask = (input_df['denominator']>=5)
         #input_df = input_df.loc[mask]
+        
+        ## remove num/denom columns
         input_df = input_df.drop(columns=['numerator', 'denominator'])
         
         ## unstack
@@ -135,14 +139,19 @@ class ChangeDetection(object):
         input_df = input_df.set_index('month')
         
         ## drop columns with missing values
-        input_df = input_df.dropna(axis=1)
+        #input_df = input_df.dropna(axis=1) # removed after implementing fix
+                                            # to include missing vals
         
         ## drop columns with all identical values
         cols = input_df.select_dtypes([np.number]).columns
-        std = input_df[cols][:-5].std() #added [:-1] to remove ones with
-                                        #one wierd value at the end
-        cols_to_drop = std[std == 0].index
+        std = input_df[cols][:-5].std() #added [:-5] to remove ones with
+                                        #a few wierd values at the end
+        cols_to_drop = std[(std == 0)|(std.isna())].index
         input_df = input_df.drop(cols_to_drop, axis=1)
+        
+        ## drop columns with high proporiton of missing values
+        mask = input_df.isna().sum() < len(input_df)/2
+        input_df = input_df[input_df.columns[mask]]
         
         ## date to unix timecode (for R)
         input_df.index = input_df.index - pd.Timestamp("1970-01-01")
@@ -227,7 +236,8 @@ class ChangeDetection(object):
                                         script_name,
                                         input_name,
                                         output_name,
-                                        os.getcwd())
+                                        os.getcwd(),
+                                        self.direction)
             processes.append(process)
         
         for process in processes:
