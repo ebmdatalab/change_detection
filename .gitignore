@@ -1,7 +1,8 @@
 
 *.tmp
-.ipynb_checkpoints/change_speed_metrics-checkpoint.ipynb
+*-checkpoint.ipynb
 *.pyc
 *.png
 *.csv
 *.RData
+*.Rhistory
