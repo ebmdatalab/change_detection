@@ -75,7 +75,7 @@ withCallingHandlers({
       m <- is.na(y)
       m <- m * 1
       ### Fill in missing values with arbitrary number
-      y[is.na(y)] <- 99
+      y[is.na(y)] <- -1
       
       islstr.res <- isat(y,
                          t.pval=p_alpha,

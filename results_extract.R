@@ -106,6 +106,7 @@ for (i in 1:(vars.list))
     rel.coef <- islstr.res$coefficients[rel.coef.num]
     mconst.res <- islstr.res$coefficients[islstr.res$specific.spec["mconst"]]
     fit.res <- fitted(islstr.res) ##fitted values
+    fit.res <- fit.res[!fit.res<0]
     
     #### Measure 1.1: the first breaks where the coefficient path is also downward sloping
     if (arguments[5] == 'both'){
@@ -303,7 +304,7 @@ for (i in 1:(vars.list))
     png(filename)
     par(mfrow=c(1,1))
     islstr.res$aux$y[islstr.res$aux$y == 99] <- NA
-    plot(islstr.res$aux$y, col="black", ylab="Numerator over denominator", xlab="Time series months", type="l",las=1) ##
+    plot(islstr.res$aux$y, col="black", ylab="Numerator over denominator", xlab="Time series months", type="l",ylim=c(0, 1),las=1) ##
     trendline <- tis.path$indic.fit$indic.fit+islstr.res$coefficients[islstr.res$specific.spec["mconst"]]
     lines(trendline,  col="red", lwd=2) ###fitted lines
     if (nbreak > 0){
