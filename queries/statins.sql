@@ -20,18 +20,14 @@ ORDER BY
 month, bnf_code)
 
 SELECT practice AS code, SUM(items) AS denominator, CAST(month AS DATE) AS month, SUM(CASE WHEN concat(SUBSTR(bnf_code,1,9),SUBSTR(bnf_code,-2,2)) NOT IN (
-    '0212000AAAD', --Rosuvastatin Calc_Tab 5mg (brand, generic) 
     '0212000AAAA', --Rosuvastatin Calc_Tab 10mg (brand, generic) 
     '0212000AAAB', --Rosuvastatin Calc_Tab 20mg (brand, generic) 
     '0212000AAAC', --Rosuvastatin Calc_Tab 40mg (brand, generic) 
-    '0212000B0AA', --Atorvastatin_Tab 10mg (brand, generic)
-    '0212000B0AL', --Atorvastatin_Tab Chble 10mg (brand, generic) 
     '0212000B0AB', --Atorvastatin_Tab 20mg (brand, generic)
     '0212000B0AC', --Atorvastatin_Tab 40mg (brand, generic) 
     '0212000B0AD', --Atorvastatin_Tab 80mg (brand, generic)
     '0212000B0AN', --Atorvastatin_Tab 30mg (brand, generic)
     '0212000B0AP', --Atorvastatin_Tab 60mg (brand, generic)
-    '0212000Y0AD', --Simvastatin_Tab 40mg (brand, generic)
     '0212000Y0AH') --Simvastatin_Tab 80mg (brand, generic)
     THEN items ELSE 0 END) AS numerator
 
@@ -53,6 +49,7 @@ WHERE SUBSTR(bnf_code,1,9) IN (
     '0212000X0', --Pravastatin Sodium 
     '0212000Y0') --Simvastatin
     AND month >= '2013-07-01'
+    AND month <= '2019-03-01'
 
 GROUP BY 
  practice, month

@@ -37,7 +37,8 @@ class ChangeDetection(object):
                  verbose=False,
                  sample=False,
                  measure=False,
-                 direction='both'):
+                 direction='both',
+                 use_cache=True):
         
         self.name = name
         self.num_cores = cpu_count() - 1
@@ -45,6 +46,8 @@ class ChangeDetection(object):
         self.sample = sample
         self.measure = measure
         self.direction = direction
+        self.use_cache = use_cache
+        self.writing = False
         
     def get_working_dir(self, folder):
         folder_name = folder.replace('%', '')
@@ -96,13 +99,17 @@ class ChangeDetection(object):
                 self.create_dir(get_data_dir)
                 query = self.get_measure_query(measure_name)
                 csv_path = os.path.join(get_data_dir, 'bq_cache.csv')
-                bq.cached_read(query, csv_path=csv_path)
+                bq.cached_read(query,
+                               csv_path=csv_path,
+                               use_cache=self.use_cache)
         else:
             get_data_dir = self.get_working_dir(self.name)
             self.create_dir(get_data_dir)
             query = self.get_custom_query()
             csv_path = os.path.join(get_data_dir, 'bq_cache.csv')
-            bq.cached_read(query, csv_path=csv_path)
+            bq.cached_read(query,
+                           csv_path=csv_path,
+                           use_cache=self.use_cache)
         print('All queries done')
     
     def shape_dataframe(self, csv_name='bq_cache.csv'):
@@ -116,8 +123,8 @@ class ChangeDetection(object):
         '''
         csv_path = os.path.join(self.working_dir, csv_name)
         while not os.path.exists(csv_path):
-            time.sleep(1)
-        time.sleep(3)
+            time.sleep(0.5)
+        #time.sleep(3)
         input_df = pd.read_csv(csv_path)
         input_df = input_df.sort_values(['code', 'month'])
         input_df['ratio'] = input_df['numerator']/(input_df['denominator'])
