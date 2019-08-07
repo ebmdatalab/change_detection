@@ -38,7 +38,8 @@ class ChangeDetection(object):
                  sample=False,
                  measure=False,
                  direction='both',
-                 use_cache=True):
+                 use_cache=True,
+                 csv_name = 'bq_cache.csv'):
         
         self.name = name
         self.num_cores = cpu_count() - 1
@@ -48,6 +49,7 @@ class ChangeDetection(object):
         self.direction = direction
         self.use_cache = use_cache
         self.writing = False
+        self.csv_name = csv_name
         
     def get_working_dir(self, folder):
         folder_name = folder.replace('%', '')
@@ -98,7 +100,7 @@ class ChangeDetection(object):
                 get_data_dir = self.get_working_dir(folder_name)
                 self.create_dir(get_data_dir)
                 query = self.get_measure_query(measure_name)
-                csv_path = os.path.join(get_data_dir, 'bq_cache.csv')
+                csv_path = os.path.join(get_data_dir, self.csv_name)
                 bq.cached_read(query,
                                csv_path=csv_path,
                                use_cache=self.use_cache)
@@ -106,13 +108,13 @@ class ChangeDetection(object):
             get_data_dir = self.get_working_dir(self.name)
             self.create_dir(get_data_dir)
             query = self.get_custom_query()
-            csv_path = os.path.join(get_data_dir, 'bq_cache.csv')
+            csv_path = os.path.join(get_data_dir, self.csv_name)
             bq.cached_read(query,
                            csv_path=csv_path,
                            use_cache=self.use_cache)
         print('All queries done')
     
-    def shape_dataframe(self, csv_name='bq_cache.csv'):
+    def shape_dataframe(self):
         '''
         Returns data in a dataframe in the format needed for `r_detect()`
         
@@ -121,7 +123,7 @@ class ChangeDetection(object):
             assumed to be located in `self.working_dir`. Default 
             `bq_cache.csv`
         '''
-        csv_path = os.path.join(self.working_dir, csv_name)
+        csv_path = os.path.join(self.working_dir, self.csv_name)
         while not os.path.exists(csv_path):
             time.sleep(0.5)
         #time.sleep(3)
@@ -278,7 +280,6 @@ class ChangeDetection(object):
                 self.r_detect()
                 self.r_extract()
                 self.concatenate_split_dfs()
-            
     
     def clear(self):
         os.system( 'cls' )
@@ -286,9 +287,10 @@ class ChangeDetection(object):
     def run(self):
         if self.measure:
             self.measure_list = self.get_measure_list()
-        p1 = Process(target = self.get_data)
+        if self.csv_name == 'bq_cache.csv':
+            p1 = Process(target = self.get_data)
+            p1.start()
         p2 = Process(target = self.detect_change)
-        p1.start()
         p2.start()
     
     def concatenate_outputs(self):
