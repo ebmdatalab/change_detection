@@ -8,12 +8,7 @@ import numpy as np
 from ebmdatalab import bq
 
 '''
-still need to:
-    - implement missing data pass through (see Felix email)
-    - integrate getting data from measures
-'''
-'''
-Installs the following R modules:
+required R modules:
 # zoo
 # caTools
 # gets
