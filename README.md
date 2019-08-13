@@ -4,7 +4,7 @@ Detects changes in time series using the R package gets (https://cran.r-project.
 
 ## Requirements:
 
-Python with an associated install of R. I've used Anaconda to do this.
+Python with an associated install of R.
 
 ### Python installation requires:
 - ebmdatalab library https://github.com/ebmdatalab/datalab-pandas
@@ -15,7 +15,7 @@ Python with an associated install of R. I've used Anaconda to do this.
 - gets
 
 ## Usage
- See https://github.com/ebmdatalab/prescribing_change_metrics/blob/master/change_speed_metrics.ipynb for example of use
+ See https://github.com/ebmdatalab/change_detection/blob/master/change_speed_metrics.ipynb for examples of use
 
 ## Data flow
 1. Queries data from BigQuery, either by:
