@@ -45,7 +45,7 @@ class ChangeDetection(object):
         self.use_cache = use_cache
         self.writing = False
         self.csv_name = csv_name
-        
+    
     def get_working_dir(self, folder):
         folder_name = folder.replace('%', '')
         return os.path.join(os.getcwd(), 'data', folder_name)
@@ -65,7 +65,7 @@ class ChangeDetection(object):
         ''' % (self.name)
         measure_list = pd.read_gbq(q, project_id = 'ebmdatalab')
         return measure_list['table_id']
-        
+    
     def get_measure_query(self, measure_name):
         if 'practice' in self.name:
             code_col = 'practice_id'
@@ -83,7 +83,7 @@ class ChangeDetection(object):
         return q
     
     def get_custom_query(self):
-        query = 'queries/' + self.name + '.sql'
+        query = os.path.join(os.getcwd(), self.name + '.sql')
         with open(query) as q:
             return q.read()
     
@@ -174,7 +174,8 @@ class ChangeDetection(object):
         '''
         ## Define R command
         command = 'Rscript'
-        path2script = os.path.join(os.getcwd(), script_name)
+        module_folder = os.path.dirname(os.path.realpath(__file__))
+        path2script = os.path.join(module_folder, script_name)
         cmd = [command, path2script]
 
         ## Define arguments to pass to R
@@ -235,12 +236,13 @@ class ChangeDetection(object):
             script_name = 'results_extract.R'
             input_name = "r_intermediate_%s.RData" % (i)
             output_name = "r_output_%s.csv" % (i)
+            module_folder = os.path.dirname(os.path.realpath(__file__))
             
             process = self.run_r_script(i,
                                         script_name,
                                         input_name,
                                         output_name,
-                                        os.getcwd(),
+                                        module_folder,
                                         self.direction)
             processes.append(process)
         
