@@ -9,3 +9,12 @@ author-email = "alex.walker@phc.ox.ac.uk"
 home-page = "https://github.com/ebmdatalab/change_detection"
 classifiers = ["License :: OSI Approved :: MIT License"]
 
+requires = [
+         "pandas >= 0.24",
+         "pandas-gbq >= 0.8.0",
+         "numpy",
+         "rpy2",
+         "ebmdatalab >=0.0.20"
+]
+
+description-file = "README.md"
