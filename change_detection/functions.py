@@ -8,11 +8,23 @@ import numpy as np
 from ebmdatalab import bq
 
 '''
-required R modules:
+required R packages:
 # zoo
 # caTools
 # gets
 '''
+def install_r_packages():
+    import rpy2.robjects.packages as rpackages
+    from rpy2.robjects.vectors import StrVector
+    utils = rpackages.importr('utils')
+    utils.chooseCRANmirror(ind=1)
+    
+    packnames = ['zoo','caTools','gets']
+    names_to_install = [pkg for pkg in packnames if not rpackages.isinstalled(pkg)]
+    if len(names_to_install) > 0:
+        utils.install_packages(StrVector(names_to_install))
+        print('Installed ' + str(names_to_install))
+install_r_packages()
 
 def run_r_script(path):
     command = 'Rscript'
