@@ -284,6 +284,9 @@ class ChangeDetection(object):
                     self.concatenate_split_dfs()
         else:
             self.working_dir = self.get_working_dir(self.name)
+            if ~os.path.isdir(os.path.join(self.working_dir, 'figures')):
+                get_data_dir = self.get_working_dir(self.name)
+                self.create_dir(get_data_dir)
             out_path = os.path.join(self.working_dir, 'r_output.csv')
             if ~os.path.exists(out_path):
                 self.r_detect()

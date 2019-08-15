@@ -8,13 +8,14 @@ See https://github.com/ebmdatalab/change_detection/blob/master/change_speed_metr
 
 ## Data flow
 1. Get data, by:
-    - using a csv in the same folder as the notebook that you're using, table must have only the fields `code`, `month`, `numerator` and `denominator`
+    - using a csv in `data/<name>`, which must have only the fields `code`, `month`, `numerator` and `denominator`
     - creating a BigQuery SQL query in the same folder as the notebook that you're using, query must produce a table with only the fields `code`, `month`, `numerator` and `denominator`
     - querying any number of the OpenPrescribing measures in BigQuery
 2. Reshapes data with Pandas
 3. Splits data into chunks and passes each chunk to the R change detection code
 4. The resulting output is then extracted with further R code
 5. The R outputs are then concatenated
+
 
 ## Output table
 
