@@ -7,5 +7,6 @@
 *.RData
 *.Rhistory
 *.pdf
-queries/*
-data/*
+queries/
+data/
+dist/
