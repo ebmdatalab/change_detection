@@ -1,6 +1,6 @@
 SELECT
   DISTINCT code,
-  i.month,
+  DATE(i.month) AS month,
   numerator,
   denominator
 FROM (

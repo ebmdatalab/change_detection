@@ -4,7 +4,7 @@ Detects changes in time series using the R package gets (https://cran.r-project.
 
 
 ## Usage
-See https://github.com/ebmdatalab/change_detection/blob/master/change_speed_metrics.ipynb for examples of use.
+See https://github.com/ebmdatalab/change_detection/blob/master/examples/examples.ipynb for examples of use.
 
 ## Data flow
 1. Get data, by:
