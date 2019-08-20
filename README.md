@@ -2,6 +2,10 @@
 
 Detects changes in time series using the R package gets (https://cran.r-project.org/web/packages/gets/index.html). Uses a combination of Google BigQuery and Python to query data, which is then fed to the R change detection code. Outputs a table containing results.
 
+## Installation
+`pip install change_detection`
+
+Anaconda users may have to `conda install rpy2` and `conda install geopandas` if not already installed.
 
 ## Usage
 See https://github.com/ebmdatalab/change_detection/blob/master/examples/examples.ipynb for examples of use.
