@@ -1,6 +1,6 @@
 # Change detection in prescribing data
 
-Detects changes in time series using the R package gets (https://cran.r-project.org/web/packages/gets/index.html). Uses a combination of Google BigQuery and Python to query data, which is then fed to the R change detection code. Outputs a table containing results.
+Detects changes in time series with a python wrapper around the R package gets (https://cran.r-project.org/web/packages/gets/index.html). Uses a combination of Google BigQuery and Python to query data, which is then fed to the R change detection code. Outputs a table containing results.
 
 ## Installation
 `pip install change_detection`
