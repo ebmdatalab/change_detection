@@ -154,10 +154,13 @@ class ChangeDetection(object):
         input_df['month'] = pd.to_datetime(input_df['month'])
         input_df = input_df.set_index('month')
         
+        ## replace inf and -inf with NaN
+        input_df = input_df.replace([np.inf, -np.inf], np.nan)
+        
         ## drop columns with missing values
         #input_df = input_df.dropna(axis=1) # removed after implementing fix
                                             # to include missing vals
-        
+                                            
         ## drop columns with all identical values
         cols = input_df.select_dtypes([np.number]).columns
         std = input_df[cols][:-5].std() #added [:-5] to remove ones with
