@@ -316,7 +316,8 @@ class ChangeDetection(object):
     def concatenate_outputs(self):
         assert self.measure, "Not to be used on single outputs"
         working_dir = self.get_working_dir(self.name)
-        folders = os.listdir(working_dir)
+        folders = [entry.name for entry in
+                   os.scandir(working_dir) if entry.is_dir()]
         files = []
         for folder in folders:
             file = os.path.join(working_dir, folder, 'r_output.csv')
