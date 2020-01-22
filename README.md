@@ -20,6 +20,16 @@ See https://github.com/ebmdatalab/change_detection/blob/master/examples/examples
 4. The resulting output is then extracted with further R code
 5. The R outputs are then concatenated
 
+### Options
+- `name` specifies either the name of the custom SQL file, or the name of the BigQuery measure to be queried
+- `verbose` makes the R output more verbose to help with bug fixing _default = False_
+- `sample` for testing purposes, takes a random sample of 100 entities, to reduce processing time _default = False_
+- `measure` specifies that the `name` specified refers to a measure, rather than custom SQL _default = False_
+- `direction` specifies which direction to look for changes, may be `'up'`, `'down'`, or `'both'`, _default = 'both'_
+- `use_cache` passes the `use_cache` option to `bq.cached_read` _default = True_
+- `csv_name` to specify a .csv file to be used in the change detection, rather than getting the data from BigQuery
+- `overwrite` forces reprocessing of the change detection, default behaviour is to not re-run if the output files exist _default = False_
+- `draw_figures` draw an R plot for each of the time-series, along with plotting regression lines/breaks. These are stored in the `figures` folder. Options are `'no'` or `'yes'` _default = 'no'_
 
 ## Output table
 
