@@ -31,7 +31,10 @@ source(file.path(arguments[4], "trend_isat_functions.R"))
 ########## Calibration of Analysis
 ###################
 
-saveplots_analysis <- TRUE ###save plots of output of analysis
+saveplots_analysis <- FALSE ###save plots of output of analysis
+if (arguments[6] == 'yes'){
+  saveplots_analysis <- TRUE
+}
 fig_path_tis_analysis <- paste(arguments[1], "/figures/", sep = "") ###set path to store analysis figures
 #fig_path_tis_analysis <- "C:\\Users\\ajwalker\\Documents\\GitHub\\prescribing_change_metrics\\data\\testing\\figures\\" ###set path to store analysis figures
 
@@ -304,7 +307,7 @@ for (i in 1:(vars.list))
     png(filename)
     par(mfrow=c(1,1))
     islstr.res$aux$y[islstr.res$aux$y == 99] <- NA
-    plot(islstr.res$aux$y, col="black", ylab="Numerator over denominator", xlab="Time series months", type="l",ylim=c(0, 1),las=1) ##
+    plot(islstr.res$aux$y, col="black", ylab="Numerator over denominator", xlab="Time series months", type="l",las=1) ##
     trendline <- tis.path$indic.fit$indic.fit+islstr.res$coefficients[islstr.res$specific.spec["mconst"]]
     lines(trendline,  col="red", lwd=2) ###fitted lines
     if (nbreak > 0){

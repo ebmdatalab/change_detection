@@ -46,7 +46,9 @@ class ChangeDetection(object):
                  measure=False,
                  direction='both',
                  use_cache=True,
-                 csv_name = 'bq_cache.csv'):
+                 csv_name='bq_cache.csv',
+                 overwrite=False,
+                 draw_figures='no'):
         
         self.name = name
         self.num_cores = cpu_count() - 1
@@ -57,6 +59,8 @@ class ChangeDetection(object):
         self.use_cache = use_cache
         self.writing = False
         self.csv_name = csv_name
+        self.overwrite = overwrite
+        self.draw_figures = draw_figures
     
     def get_working_dir(self, folder):
         folder_name = folder.replace('%', '')
@@ -258,7 +262,8 @@ class ChangeDetection(object):
                                         input_name,
                                         output_name,
                                         module_folder,
-                                        self.direction)
+                                        self.direction,
+                                        self.draw_figures)
             processes.append(process)
         
         for process in processes:
@@ -281,17 +286,17 @@ class ChangeDetection(object):
                 folder_name = os.path.join(self.name, measure_name)
                 self.working_dir = self.get_working_dir(folder_name)
                 out_path = os.path.join(self.working_dir, 'r_output.csv')
-                if ~os.path.exists(out_path):
+                if self.overwrite | (not os.path.exists(out_path)):
                     self.r_detect()
                     self.r_extract()
                     self.concatenate_split_dfs()
         else:
             self.working_dir = self.get_working_dir(self.name)
-            if ~os.path.isdir(os.path.join(self.working_dir, 'figures')):
+            if not os.path.isdir(os.path.join(self.working_dir, 'figures')):
                 get_data_dir = self.get_working_dir(self.name)
                 self.create_dir(get_data_dir)
             out_path = os.path.join(self.working_dir, 'r_output.csv')
-            if ~os.path.exists(out_path):
+            if self.overwrite | (not os.path.exists(out_path)):
                 self.r_detect()
                 self.r_extract()
                 self.concatenate_split_dfs()
@@ -311,7 +316,8 @@ class ChangeDetection(object):
     def concatenate_outputs(self):
         assert self.measure, "Not to be used on single outputs"
         working_dir = self.get_working_dir(self.name)
-        folders = os.listdir(working_dir)
+        folders = [entry.name for entry in
+                   os.scandir(working_dir) if entry.is_dir()]
         files = []
         for folder in folders:
             file = os.path.join(working_dir, folder, 'r_output.csv')
@@ -323,8 +329,3 @@ class ChangeDetection(object):
         df = pd.concat(df_to_concat)
         df = df.sort_values(['measure','name'])
         return df.set_index(['measure','name'])
-
-        
-        
-        
-        
