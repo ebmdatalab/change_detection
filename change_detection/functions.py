@@ -47,7 +47,8 @@ class ChangeDetection(object):
                  direction='both',
                  use_cache=True,
                  csv_name='bq_cache.csv',
-                 overwrite=False):
+                 overwrite=False,
+                 draw_figures='no'):
         
         self.name = name
         self.num_cores = cpu_count() - 1
@@ -58,7 +59,8 @@ class ChangeDetection(object):
         self.use_cache = use_cache
         self.writing = False
         self.csv_name = csv_name
-        self.overwrite=overwrite
+        self.overwrite = overwrite
+        self.draw_figures = draw_figures
     
     def get_working_dir(self, folder):
         folder_name = folder.replace('%', '')
@@ -260,7 +262,8 @@ class ChangeDetection(object):
                                         input_name,
                                         output_name,
                                         module_folder,
-                                        self.direction)
+                                        self.direction,
+                                        self.draw_figures)
             processes.append(process)
         
         for process in processes:

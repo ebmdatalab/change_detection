@@ -31,7 +31,10 @@ source(file.path(arguments[4], "trend_isat_functions.R"))
 ########## Calibration of Analysis
 ###################
 
-saveplots_analysis <- TRUE ###save plots of output of analysis
+saveplots_analysis <- FALSE ###save plots of output of analysis
+if (arguments[6] == 'yes'){
+  saveplots_analysis <- TRUE
+}
 fig_path_tis_analysis <- paste(arguments[1], "/figures/", sep = "") ###set path to store analysis figures
 #fig_path_tis_analysis <- "C:\\Users\\ajwalker\\Documents\\GitHub\\prescribing_change_metrics\\data\\testing\\figures\\" ###set path to store analysis figures
 
