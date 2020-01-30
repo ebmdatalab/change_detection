@@ -95,12 +95,12 @@ class ChangeDetection(object):
         q = '''
         SELECT
           month,
-          %s AS code,
+          {} AS code,
           numerator,
           denominator
         FROM
-          ebmdatalab.measures.%s
-        ''' % (code_col, measure_name)
+          ebmdatalab.measures.{}
+        '''.format(code_col, measure_name)
         return q
     
     def get_custom_query(self):
@@ -236,8 +236,8 @@ class ChangeDetection(object):
         processes = []
         for item in split_df:
             script_name = 'change_detection.R'
-            input_name = "r_input_%s.csv" % (i)
-            output_name = "r_intermediate_%s.RData" % (i)
+            input_name = "r_input_{}.csv".format(i)
+            output_name = "r_intermediate_{}.RData".format(i)
             
             df = pd.DataFrame(item)
             df.to_csv(os.path.join(self.working_dir, input_name))
@@ -252,7 +252,7 @@ class ChangeDetection(object):
         for process in processes:
             process.wait()
             assert process.returncode == 0, \
-              'Change detection process failed %s' % (process.args)
+              'Change detection process failed {}'.format(process.args)
     
     def r_extract(self):
         '''
@@ -262,8 +262,8 @@ class ChangeDetection(object):
         processes = []
         for i in range(0, self.num_cores):
             script_name = 'results_extract.R'
-            input_name = "r_intermediate_%s.RData" % (i)
-            output_name = "r_output_%s.csv" % (i)
+            input_name = "r_intermediate_{}.RData".format(i)
+            output_name = "r_output_{}.csv".format(i)
             module_folder = os.path.dirname(os.path.realpath(__file__))
             
             process = self.run_r_script(i,
@@ -278,7 +278,7 @@ class ChangeDetection(object):
         for process in processes:
             process.wait()
             assert process.returncode == 0, \
-              'Results extraction process failed %s' % (process.args)
+              'Results extraction process failed {}'.format(process.args)
     
     def concatenate_split_dfs(self):
         files = glob.glob(os.path.join(self.working_dir, 'r_output_*.csv'))
