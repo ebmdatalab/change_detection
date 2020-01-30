@@ -71,15 +71,20 @@ class ChangeDetection(object):
         os.makedirs(os.path.join(dir_path, 'figures'), exist_ok=True)
     
     def get_measure_list(self):
-        q = '''
+        query = '''
         SELECT
           table_id
         FROM
           ebmdatalab.measures.__TABLES__
         WHERE
-          table_id LIKE "%s"
-        ''' % (self.name)
-        measure_list = pd.read_gbq(q, project_id = 'ebmdatalab')
+          table_id LIKE "{}"
+        '''.format(self.name)
+        csv_path = os.path.join(self.get_working_dir(self.name), "measure_list.csv")
+        measure_list = bq.cached_read(
+            query,
+            csv_path=csv_path,
+            use_cache=self.use_cache
+            )
         return measure_list['table_id']
     
     def get_measure_query(self, measure_name):
@@ -104,7 +109,8 @@ class ChangeDetection(object):
             return q.read()
     
     def get_data(self):
-        print('Running all queries')
+        if not self.use_cache:
+            print('Running all queries')
         if self.measure:
             for measure_name in self.measure_list:
                 folder_name = os.path.join(self.name, measure_name)
@@ -123,7 +129,10 @@ class ChangeDetection(object):
             bq.cached_read(query,
                            csv_path=csv_path,
                            use_cache=self.use_cache)
-        print('All queries done')
+        if not self.use_cache:
+            print('All queries done')
+        else:
+            print('Using cached data')
     
     def shape_dataframe(self):
         '''
