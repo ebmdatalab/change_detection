@@ -48,7 +48,9 @@ class ChangeDetection(object):
                  use_cache=True,
                  csv_name='bq_cache.csv',
                  overwrite=False,
-                 draw_figures='no'):
+                 draw_figures='no',
+                 measure_folder='measures'
+                 ):
         
         self.name = name
         self.num_cores = cpu_count() - 1
@@ -57,10 +59,10 @@ class ChangeDetection(object):
         self.measure = measure
         self.direction = direction
         self.use_cache = use_cache
-        self.writing = False
         self.csv_name = csv_name
         self.overwrite = overwrite
         self.draw_figures = draw_figures
+        self.measure_folder = measure_folder
     
     def get_working_dir(self, folder):
         folder_name = folder.replace('%', '')
@@ -75,10 +77,10 @@ class ChangeDetection(object):
         SELECT
           table_id
         FROM
-          ebmdatalab.measures.__TABLES__
+          ebmdatalab.{measure_folder}.__TABLES__
         WHERE
-          table_id LIKE "{}"
-        '''.format(self.name)
+          table_id LIKE "{name}"
+        '''.format(self.measure_folder, self.name)
         csv_path = os.path.join(self.get_working_dir(self.name), "measure_list.csv")
         measure_list = bq.cached_read(
             query,
@@ -95,12 +97,12 @@ class ChangeDetection(object):
         q = '''
         SELECT
           month,
-          {} AS code,
+          {code_col} AS code,
           numerator,
           denominator
         FROM
-          ebmdatalab.measures.{}
-        '''.format(code_col, measure_name)
+          ebmdatalab.{measure_folder}.{measure_name}
+        '''.format(code_col, self.measure_folder, measure_name)
         return q
     
     def get_custom_query(self):
