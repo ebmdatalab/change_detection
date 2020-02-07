@@ -80,8 +80,13 @@ class ChangeDetection(object):
           ebmdatalab.{measure_folder}.__TABLES__
         WHERE
           table_id LIKE "{name}"
-        '''.format(self.measure_folder, self.name)
-        csv_path = os.path.join(self.get_working_dir(self.name), "measure_list.csv")
+        '''.format(
+            measure_folder=self.measure_folder,
+            name=self.name
+            )
+        dir_path = self.get_working_dir(self.name)
+        csv_path = os.path.join(dir_path, "measure_list.csv")
+        os.makedirs(dir_path, exist_ok=True)
         measure_list = bq.cached_read(
             query,
             csv_path=csv_path,
@@ -102,7 +107,11 @@ class ChangeDetection(object):
           denominator
         FROM
           ebmdatalab.{measure_folder}.{measure_name}
-        '''.format(code_col, self.measure_folder, measure_name)
+        '''.format(
+            code_col=code_col,
+            measure_folder=self.measure_folder,
+            measure_name=measure_name
+            )
         return q
     
     def get_custom_query(self):
