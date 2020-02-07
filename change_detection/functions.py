@@ -73,14 +73,17 @@ class ChangeDetection(object):
         os.makedirs(os.path.join(dir_path, 'figures'), exist_ok=True)
     
     def get_measure_list(self):
-        query = f'''
+        query = '''
         SELECT
           table_id
         FROM
-          ebmdatalab.{self.measure_folder}.__TABLES__
+          ebmdatalab.{measure_folder}.__TABLES__
         WHERE
-          table_id LIKE "{self.name}"
-        '''
+          table_id LIKE "{name}"
+        '''.format(
+            measure_folder=self.measure_folder,
+            name=self.name
+            )
         dir_path = self.get_working_dir(self.name)
         csv_path = os.path.join(dir_path, "measure_list.csv")
         os.makedirs(dir_path, exist_ok=True)
@@ -96,15 +99,19 @@ class ChangeDetection(object):
             code_col = 'practice_id'
         elif 'ccg' in self.name:
             code_col = 'pct_id'
-        q = f'''
+        q = '''
         SELECT
           month,
           {code_col} AS code,
           numerator,
           denominator
         FROM
-          ebmdatalab.{self.measure_folder}.{measure_name}
-        '''
+          ebmdatalab.{measure_folder}.{measure_name}
+        '''.format(
+            code_col=code_col,
+            measure_folder=self.measure_folder,
+            measure_name=measure_name
+            )
         return q
     
     def get_custom_query(self):
@@ -240,8 +247,8 @@ class ChangeDetection(object):
         processes = []
         for item in split_df:
             script_name = 'change_detection.R'
-            input_name = f'r_input_{i}.csv'
-            output_name = f'r_intermediate_{i}.RData'
+            input_name = "r_input_{}.csv".format(i)
+            output_name = "r_intermediate_{}.RData".format(i)
             
             df = pd.DataFrame(item)
             df.to_csv(os.path.join(self.working_dir, input_name))
@@ -256,7 +263,7 @@ class ChangeDetection(object):
         for process in processes:
             process.wait()
             assert process.returncode == 0, \
-              f'Change detection process failed {process.args}'
+              'Change detection process failed {}'.format(process.args)
     
     def r_extract(self):
         '''
@@ -266,8 +273,8 @@ class ChangeDetection(object):
         processes = []
         for i in range(0, self.num_cores):
             script_name = 'results_extract.R'
-            input_name = f'r_intermediate_{i}.RData'
-            output_name = f'r_output_{i}.csv'
+            input_name = "r_intermediate_{}.RData".format(i)
+            output_name = "r_output_{}.csv".format(i)
             module_folder = os.path.dirname(os.path.realpath(__file__))
             
             process = self.run_r_script(i,
@@ -282,7 +289,7 @@ class ChangeDetection(object):
         for process in processes:
             process.wait()
             assert process.returncode == 0, \
-              f'Results extraction process failed {process.args}'
+              'Results extraction process failed {}'.format(process.args)
     
     def concatenate_split_dfs(self):
         files = glob.glob(os.path.join(self.working_dir, 'r_output_*.csv'))
