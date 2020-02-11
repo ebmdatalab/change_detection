@@ -120,8 +120,6 @@ class ChangeDetection(object):
             return q.read()
     
     def get_data(self):
-        if not self.use_cache:
-            print('Running all queries')
         if self.measure:
             for measure_name in self.measure_list:
                 folder_name = os.path.join(self.name, measure_name)
@@ -140,10 +138,6 @@ class ChangeDetection(object):
             bq.cached_read(query,
                            csv_path=csv_path,
                            use_cache=self.use_cache)
-        if not self.use_cache:
-            print('All queries done')
-        else:
-            print('Using cached data')
     
     def shape_dataframe(self):
         '''
