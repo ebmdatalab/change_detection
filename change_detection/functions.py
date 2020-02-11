@@ -300,26 +300,25 @@ class ChangeDetection(object):
         df = df.set_index('name')
         df.to_csv(os.path.join(self.working_dir, 'r_output.csv'))
     
+    def run_if_needed(self, out_path):
+        if self.overwrite | (not os.path.exists(out_path)):
+            self.r_detect()
+            self.r_extract()
+            self.concatenate_split_dfs()
+
     def detect_change(self):
         if self.measure:
             for measure_name in self.measure_list:
                 folder_name = os.path.join(self.name, measure_name)
                 self.working_dir = self.get_working_dir(folder_name)
                 out_path = os.path.join(self.working_dir, 'r_output.csv')
-                if self.overwrite | (not os.path.exists(out_path)):
-                    self.r_detect()
-                    self.r_extract()
-                    self.concatenate_split_dfs()
+                self.run_if_needed(out_path)
         else:
             self.working_dir = self.get_working_dir(self.name)
             if not os.path.isdir(os.path.join(self.working_dir, 'figures')):
-                get_data_dir = self.get_working_dir(self.name)
-                self.create_dir(get_data_dir)
+                self.create_dir(self.working_dir)
             out_path = os.path.join(self.working_dir, 'r_output.csv')
-            if self.overwrite | (not os.path.exists(out_path)):
-                self.r_detect()
-                self.r_extract()
-                self.concatenate_split_dfs()
+            self.run_if_needed(out_path)
     
     def clear(self):
         os.system( 'cls' )
@@ -333,9 +332,9 @@ class ChangeDetection(object):
         p2 = Process(target = self.detect_change)
         p2.start()
     
-    def concatenate_outputs(self):
+    def concatenate_outputs(self, folder_suffix=''):
         assert self.measure, "Not to be used on single outputs"
-        working_dir = self.get_working_dir(self.name)
+        working_dir = self.get_working_dir('{}{}'.format(self.name,folder_suffix))
         folders = [entry.name for entry in
                    os.scandir(working_dir) if entry.is_dir()]
         files = []
@@ -349,3 +348,26 @@ class ChangeDetection(object):
         df = pd.concat(df_to_concat)
         df = df.sort_values(['measure','name'])
         return df.set_index(['measure','name'])
+
+
+    def national_changes(self):
+        measures = self.get_measure_list()
+        for measure in measures:
+            data_path = os.path.join(
+                self.get_working_dir(self.name),
+                measure,
+                'bq_cache.csv')
+
+            self.working_dir = os.path.join(
+                self.get_working_dir('{}_national'.format(self.name)),
+                 measure)
+            if not os.path.isdir(os.path.join(self.working_dir, 'figures')):
+                self.create_dir(self.working_dir)
+            csv_path = os.path.join(self.working_dir, self.csv_name)
+            entity_level = pd.read_csv(data_path, index_col='code')
+            national_level = entity_level.groupby('month',as_index=False).sum()
+            national_level['code'] = measure
+            national_level = national_level.set_index('code')
+            national_level.to_csv(csv_path)
+            out_path = os.path.join(self.working_dir, 'r_output.csv')
+            self.run_if_needed(out_path)
