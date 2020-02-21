@@ -357,7 +357,10 @@ class ChangeDetection(object):
 
 
     def national_changes(self):
-        measures = self.get_measure_list()
+        if self.custom_measure:
+            measures = self.get_custom_measure_list()
+        else:
+            measures = self.get_measure_list()
         for measure in measures:
             data_path = os.path.join(
                 self.get_working_dir(self.name),
