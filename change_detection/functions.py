@@ -44,12 +44,13 @@ class ChangeDetection(object):
                  verbose=False,
                  sample=False,
                  measure=False,
+                 custom_measure=False,
                  direction='both',
                  use_cache=True,
                  csv_name='bq_cache.csv',
                  overwrite=False,
                  draw_figures='no',
-                 measure_folder='measures'
+                 bq_folder='measures'
                  ):
         
         self.name = name
@@ -57,12 +58,13 @@ class ChangeDetection(object):
         self.verbose = verbose
         self.sample = sample
         self.measure = measure
+        self.custom_measure = custom_measure
         self.direction = direction
         self.use_cache = use_cache
         self.csv_name = csv_name
         self.overwrite = overwrite
         self.draw_figures = draw_figures
-        self.measure_folder = measure_folder
+        self.bq_folder = bq_folder
     
     def get_working_dir(self, folder):
         folder_name = folder.replace('%', '')
@@ -77,11 +79,11 @@ class ChangeDetection(object):
         SELECT
           table_id
         FROM
-          ebmdatalab.{measure_folder}.__TABLES__
+          ebmdatalab.{bq_folder}.__TABLES__
         WHERE
           table_id LIKE "{name}"
         '''.format(
-            measure_folder=self.measure_folder,
+            bq_folder=self.bq_folder,
             name=self.name
             )
         dir_path = self.get_working_dir(self.name)
@@ -93,6 +95,11 @@ class ChangeDetection(object):
             use_cache=self.use_cache
             )
         return measure_list['table_id']
+
+    def get_custom_measure_list(self):
+        return [entry.name.split('.',1)[0] for entry
+        in os.scandir('data/measure_sql/{name}'.format(name=self.name))
+        if entry.name.endswith('.sql')]
     
     def get_measure_query(self, measure_name):
         if 'practice' in self.name:
@@ -106,16 +113,21 @@ class ChangeDetection(object):
           numerator,
           denominator
         FROM
-          ebmdatalab.{measure_folder}.{measure_name}
+          ebmdatalab.{bq_folder}.{measure_name}
         '''.format(
             code_col=code_col,
-            measure_folder=self.measure_folder,
+            bq_folder=self.bq_folder,
             measure_name=measure_name
             )
         return q
     
-    def get_custom_query(self):
-        query = os.path.join(os.getcwd(), self.name + '.sql')
+    def get_custom_query(self, measure_name='query'):
+        query = os.path.join(
+            os.getcwd(),
+            'data',
+            'measure_sql',
+            self.name,
+            measure_name+'.sql')
         with open(query) as q:
             return q.read()
     
@@ -125,7 +137,10 @@ class ChangeDetection(object):
                 folder_name = os.path.join(self.name, measure_name)
                 get_data_dir = self.get_working_dir(folder_name)
                 self.create_dir(get_data_dir)
-                query = self.get_measure_query(measure_name)
+                if self.custom_measure:
+                    query = self.get_custom_query(measure_name=measure_name)
+                else:
+                    query = self.get_measure_query(measure_name)
                 csv_path = os.path.join(get_data_dir, self.csv_name)
                 bq.cached_read(query,
                                csv_path=csv_path,
@@ -174,10 +189,6 @@ class ChangeDetection(object):
         
         ## replace inf and -inf with NaN
         input_df = input_df.replace([np.inf, -np.inf], np.nan)
-        
-        ## drop columns with missing values
-        #input_df = input_df.dropna(axis=1) # removed after implementing fix
-                                            # to include missing vals
                                             
         ## drop columns with all identical values
         cols = input_df.select_dtypes([np.number]).columns
@@ -309,8 +320,6 @@ class ChangeDetection(object):
                 self.run_if_needed(out_path)
         else:
             self.working_dir = self.get_working_dir(self.name)
-            if not os.path.isdir(os.path.join(self.working_dir, 'figures')):
-                self.create_dir(self.working_dir)
             out_path = os.path.join(self.working_dir, 'r_output.csv')
             self.run_if_needed(out_path)
     
@@ -319,7 +328,10 @@ class ChangeDetection(object):
     
     def run(self):
         if self.measure:
-            self.measure_list = self.get_measure_list()
+            if self.custom_measure:
+                self.measure_list = self.get_custom_measure_list()
+            else:
+                self.measure_list = self.get_measure_list()
         if self.csv_name == 'bq_cache.csv':
             p1 = Process(target = self.get_data)
             p1.start()
