@@ -7,5 +7,6 @@
 *.RData
 *.Rhistory
 *.pdf
+*.DS_Store
 queries/
 dist/
