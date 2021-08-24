@@ -3,7 +3,6 @@
 *-checkpoint.ipynb
 *.pyc
 *.png
-*.csv
 *.RData
 *.Rhistory
 *.pdf
