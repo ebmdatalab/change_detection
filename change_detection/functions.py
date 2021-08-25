@@ -184,8 +184,8 @@ class ChangeDetection(object):
             list(self.expected_columns.values()),
             df.columns).tolist()
 
-        for c in columns_missing:
-            check_message.append(f"[ERROR] Expected column '{c}' is missing.")
+        if ( len( columns_missing ) > 0 ):
+            check_message.append(f"[ERROR] Expected columns missing: {', '.join( columns_missing )}")
         
         return check_message
 
@@ -392,13 +392,13 @@ class ChangeDetection(object):
 
         except NameError as e:
             print( e )
-            print(f"[ERROR] Columns of {self.csv_name} are not as expected")
-            print(f"[ERROR] Specify the column names using the numberator_variable and/or denominator_variable")
+            print(f"        Columns of {self.csv_name} are not as expected")
+            print(f"        Specify the column names using the [code/date/numerator/denominator]_variable parameter(s)")
             sys.stdout.flush()
         
         except ValueError as e:
             print( e )
-            print("[ERROR] Specify the date format using the date_format parameter (by default this is '%Y-%m-%d')")
+            print("         Specify the date format using the date_format parameter (by default this is '%Y-%m-%d')")
             sys.stdout.flush()
 
     def clear(self):
