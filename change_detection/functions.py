@@ -232,7 +232,7 @@ class ChangeDetection(object):
         input_df = input_df.sort_values(['code', 'month'])
         input_df['ratio'] = input_df['numerator']/(input_df['denominator'])
         ## R script requires this header format:
-        input_df['code'] = 'ratio_quantity.' + input_df['code'] 
+        input_df['code'] = 'ratio_quantity.' + input_df['code'].apply(str) 
         input_df = input_df.set_index(['month', 'code'])
         
         ## drop small numbers
