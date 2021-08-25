@@ -28,6 +28,7 @@ if __name__ == '__main__':
                                    verbose=True,
                                    numerator_variable="indicator_numerator",
                                    denominator_variable="indicator_denominator",
+                                   date_format="%d.%m.%Y",
                                    overwrite=True,
                                    csv_name='csv_test_file_column-fix-required+date-format.csv')
 

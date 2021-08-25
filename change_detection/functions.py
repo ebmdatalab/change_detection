@@ -50,6 +50,7 @@ class ChangeDetection(object):
                  numerator_variable = 'numerator',
                  denominator_variable = 'denominator',
                  date_variable = 'month',
+                 date_format = "%Y-%m-%d",
                  direction='both',
                  use_cache=True,
                  csv_name='bq_cache.csv',
@@ -68,6 +69,7 @@ class ChangeDetection(object):
         self.numerator_variable = numerator_variable
         self.denominator_variable = denominator_variable
         self.date_variable = date_variable
+        self.date_format = date_format
         self.expected_columns = {"code": self.code_variable,
                                  "month": self.date_variable,
                                  "numerator": self.numerator_variable,
@@ -221,10 +223,10 @@ class ChangeDetection(object):
         ### Check the format of the date
         try:
             pd.to_datetime(input_df['month'],
-                            format="%Y-%m-%d",
+                            format=self.date_format,
                             errors='raise')
         except ValueError as e:
-            raise ValueError( f"Field '{self.date_variable}' should be of the format YYYY-MM-DD" )
+            raise ValueError( f"Field '{self.date_variable}' is not of the required format '{self.date_format}'" )
 
         input_df = input_df.sort_values(['code', 'month'])
         input_df['ratio'] = input_df['numerator']/(input_df['denominator'])
@@ -390,6 +392,7 @@ class ChangeDetection(object):
         
         except ValueError as e:
             print( e )
+            print("Specify the date format using the date_format parameter (by default this is '%Y-%m-%d')")
             sys.stdout.flush()
 
     def clear(self):
