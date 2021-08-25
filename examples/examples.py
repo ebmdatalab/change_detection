@@ -24,13 +24,25 @@ if __name__ == '__main__':
     #                                overwrite=True,
     #                                csv_name='csv_test_file_column-fix-required.csv')
 
+    # csv_test = chg.ChangeDetection('csv_test',
+    #                                verbose=True,
+    #                                numerator_variable="indicator_numerator",
+    #                                denominator_variable="indicator_denominator",
+    #                                date_format="%d.%m.%y",
+    #                                overwrite=True,
+    #                                csv_name='csv_test_file_column-fix-required+date-format.csv')
+
     csv_test = chg.ChangeDetection('csv_test',
                                    verbose=True,
-                                   numerator_variable="indicator_numerator",
-                                   denominator_variable="indicator_denominator",
-                                   date_format="%d.%m.%Y",
+                                   code_variable="practice",
+                                   numerator_variable="indicator_a_numerator",
+                                   denominator_variable="indicator_a_denominator",
+                                   date_variable="date",
+                                   #ßdate_format="%Y-%m-%d",
                                    overwrite=True,
-                                   csv_name='csv_test_file_column-fix-required+date-format.csv')
+                                   csv_name='measure_indicator_a_rate.csv')
+
+
 
     csv_test.run()
 
