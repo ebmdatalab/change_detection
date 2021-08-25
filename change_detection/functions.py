@@ -230,6 +230,9 @@ class ChangeDetection(object):
         except ValueError as e:
             raise ValueError( f"[ERROR] Field '{self.date_variable}' is not of the required format '{self.date_format}'" )
 
+        ### Retain only those columns that we're expecting.
+        input_df = input_df[list(self.expected_columns.keys())]
+
         input_df = input_df.sort_values(['code', 'month'])
         input_df['ratio'] = input_df['numerator']/(input_df['denominator'])
         ## R script requires this header format:
