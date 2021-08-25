@@ -38,11 +38,9 @@ if __name__ == '__main__':
                                    numerator_variable="indicator_a_numerator",
                                    denominator_variable="indicator_a_denominator",
                                    date_variable="date",
-                                   #ßdate_format="%Y-%m-%d",
+                                   date_format="%Y-%m-%d",
                                    overwrite=True,
                                    csv_name='measure_indicator_a_rate.csv')
-
-
 
     csv_test.run()
 
