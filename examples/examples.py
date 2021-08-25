@@ -13,7 +13,9 @@ if __name__ == '__main__':
     logger.setLevel(logging.INFO)
     
     csv_test = chg.ChangeDetection('csv_test',
-                               csv_name='csv_test_file.csv')
+                                    verbose=True,
+                                    overwrite=True,
+                                    csv_name='csv_test_file.csv')
     
     csv_test.run()
 

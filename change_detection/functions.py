@@ -6,6 +6,7 @@ import glob
 import pandas as pd
 import numpy as np
 from ebmdatalab import bq
+import sys
 
 '''
 required R packages:
@@ -337,6 +338,11 @@ class ChangeDetection(object):
             p1.start()
         p2 = Process(target = self.detect_change)
         p2.start()
+
+        if self.verbose == True:
+            print("*** Process initiated: ", end='')
+            print( p2 )
+            sys.stdout.flush()    
     
     def concatenate_outputs(self, folder_suffix=''):
         assert self.measure, "Not to be used on single outputs"
