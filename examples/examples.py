@@ -12,11 +12,18 @@ if __name__ == '__main__':
     logger = multiprocessing.get_logger()
     logger.setLevel(logging.INFO)
     
-    csv_test = chg.ChangeDetection('csv_test',
-                                    verbose=True,
-                                    overwrite=True,
-                                    csv_name='csv_test_file.csv')
+    # csv_test = chg.ChangeDetection('csv_test',
+    #                                 verbose=True,
+    #                                 overwrite=True,
+    #                                 csv_name='csv_test_file.csv')
     
+    csv_test = chg.ChangeDetection('csv_test',
+                                   verbose=True,
+                                   numerator_variable="indicator_numerator",
+                                   denominator_variable="indicator_denominator",
+                                   overwrite=True,
+                                   csv_name='csv_test_file_column-fix-required.csv')
+
     csv_test.run()
 
 # # %% [markdown]

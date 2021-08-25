@@ -46,6 +46,10 @@ class ChangeDetection(object):
                  sample=False,
                  measure=False,
                  custom_measure=False,
+                 code_variable = 'code',
+                 numerator_variable = 'numerator',
+                 denominator_variable = 'denominator',
+                 date_variable = 'month',
                  direction='both',
                  use_cache=True,
                  csv_name='bq_cache.csv',
@@ -60,6 +64,14 @@ class ChangeDetection(object):
         self.sample = sample
         self.measure = measure
         self.custom_measure = custom_measure
+        self.code_variable = code_variable
+        self.numerator_variable = numerator_variable
+        self.denominator_variable = denominator_variable
+        self.date_variable = date_variable
+        self.expected_columns = {"code": self.code_variable,
+                                 "month": self.date_variable,
+                                 "numerator": self.numerator_variable,
+                                 "denominator": self.denominator_variable}
         self.direction = direction
         self.use_cache = use_cache
         self.csv_name = csv_name
@@ -155,6 +167,26 @@ class ChangeDetection(object):
                            csv_path=csv_path,
                            use_cache=self.use_cache)
     
+    def amend_column_names(self,df):
+        for expected_name, actual_name in self.expected_columns.items():
+            if (expected_name != actual_name):
+                if (self.verbose):
+                    print(f"Replacing column '{actual_name}' with expected column '{expected_name}'")
+                df[expected_name] = df[actual_name]
+        return df
+
+    def check_column_names(self,df):
+        check_message = []
+
+        columns_missing = np.setdiff1d(
+            list(self.expected_columns.values()),
+            df.columns).tolist()
+
+        for c in columns_missing:
+            check_message.append(f"!!! Expected column '{c}' is missing")
+
+        return check_message
+
     def shape_dataframe(self):
         '''
         Returns data in a dataframe in the format needed for `r_detect()`
@@ -169,6 +201,12 @@ class ChangeDetection(object):
             time.sleep(0.5)
         #time.sleep(3)
         input_df = pd.read_csv(csv_path)
+        input_df = self.amend_column_names(input_df)
+        column_check_message = self.check_column_names(input_df)
+                
+        if ( len( column_check_message ) > 0 ):
+            raise NameError( '\n'.join(column_check_message) )
+
         input_df = input_df.sort_values(['code', 'month'])
         input_df['ratio'] = input_df['numerator']/(input_df['denominator'])
         ## R script requires this header format:
@@ -313,16 +351,23 @@ class ChangeDetection(object):
             self.concatenate_split_dfs()
 
     def detect_change(self):
-        if self.measure:
-            for measure_name in self.measure_list:
-                folder_name = os.path.join(self.name, measure_name)
-                self.working_dir = self.get_working_dir(folder_name)
+
+        try:
+            if self.measure:
+                for measure_name in self.measure_list:
+                    folder_name = os.path.join(self.name, measure_name)
+                    self.working_dir = self.get_working_dir(folder_name)
+                    out_path = os.path.join(self.working_dir, 'r_output.csv')
+                    self.run_if_needed(out_path)
+            else:
+                self.working_dir = self.get_working_dir(self.name)
                 out_path = os.path.join(self.working_dir, 'r_output.csv')
                 self.run_if_needed(out_path)
-        else:
-            self.working_dir = self.get_working_dir(self.name)
-            out_path = os.path.join(self.working_dir, 'r_output.csv')
-            self.run_if_needed(out_path)
+                
+        except NameError as e:
+            print(f"Columns of {self.csv_name} are not as expected")
+            print(f"You may have to specify the column names using the numberator_variable and/or denominator_variable")
+            sys.stdout.flush()
     
     def clear(self):
         os.system( 'cls' )
