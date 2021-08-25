@@ -220,7 +220,8 @@ class ChangeDetection(object):
         if ( len( column_check_message ) > 0 ):
             raise NameError( '\n'.join(column_check_message) )
 
-        ### Check the format of the date
+        ### Check the format of the date - reformat to requested
+        ### date format
         try:
             pd.to_datetime(input_df['month'],
                             format=self.date_format,
