@@ -201,11 +201,30 @@ class ChangeDetection(object):
             time.sleep(0.5)
         #time.sleep(3)
         input_df = pd.read_csv(csv_path)
+
+        #############################################################
+        ### Checking input formatting                             ###
+        #############################################################
+        
+        ### If the user nas specified other column
+        ### names via the [code/date/numerator/denominator}_variable
+        ### arguments, then these are replaced with the expected
+        ### column names in amend_column_names.
         input_df = self.amend_column_names(input_df)
+
+        ### If expected column names are still missing, an
+        ### exception will be thrown.
         column_check_message = self.check_column_names(input_df)
-                
         if ( len( column_check_message ) > 0 ):
             raise NameError( '\n'.join(column_check_message) )
+
+        ### Check the format of the date
+        try:
+            pd.to_datetime(input_df['month'],
+                            format="%Y-%m-%d",
+                            errors='raise')
+        except ValueError as e:
+            raise ValueError( f"Field '{self.date_variable}' should be of the format YYYY-MM-DD" )
 
         input_df = input_df.sort_values(['code', 'month'])
         input_df['ratio'] = input_df['numerator']/(input_df['denominator'])
@@ -363,12 +382,16 @@ class ChangeDetection(object):
                 self.working_dir = self.get_working_dir(self.name)
                 out_path = os.path.join(self.working_dir, 'r_output.csv')
                 self.run_if_needed(out_path)
-                
+
         except NameError as e:
             print(f"Columns of {self.csv_name} are not as expected")
             print(f"You may have to specify the column names using the numberator_variable and/or denominator_variable")
             sys.stdout.flush()
-    
+        
+        except ValueError as e:
+            print( e )
+            sys.stdout.flush()
+
     def clear(self):
         os.system( 'cls' )
     
