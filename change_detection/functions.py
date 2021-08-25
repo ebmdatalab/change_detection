@@ -223,9 +223,10 @@ class ChangeDetection(object):
         ### Check the format of the date - reformat to requested
         ### date format.
         try:
-            pd.to_datetime(input_df['month'],
-                            format=self.date_format,
-                            errors='raise')
+            date_tmp = pd.to_datetime(input_df['month'],
+                                               format=self.date_format,
+                                               errors='raise')
+            input_df['month'] = pd.to_datetime( date_tmp, format="%Y-%m-%d" )
         except ValueError as e:
             raise ValueError( f"[ERROR] Field '{self.date_variable}' is not of the required format '{self.date_format}'" )
 
