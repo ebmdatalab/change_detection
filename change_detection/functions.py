@@ -173,7 +173,7 @@ class ChangeDetection(object):
         for expected_name, actual_name in self.expected_columns.items():
             if (expected_name != actual_name):
                 if (self.verbose):
-                    print(f"Replacing column '{actual_name}' with expected column '{expected_name}'")
+                    print(f"[INFO] Replacing column '{actual_name}' with expected column '{expected_name}'")
                 df[expected_name] = df[actual_name]
         return df
 
@@ -185,8 +185,8 @@ class ChangeDetection(object):
             df.columns).tolist()
 
         for c in columns_missing:
-            check_message.append(f"!!! Expected column '{c}' is missing")
-
+            check_message.append(f"[ERROR] Expected column '{c}' is missing.")
+        
         return check_message
 
     def shape_dataframe(self):
@@ -227,7 +227,7 @@ class ChangeDetection(object):
                             format=self.date_format,
                             errors='raise')
         except ValueError as e:
-            raise ValueError( f"Field '{self.date_variable}' is not of the required format '{self.date_format}'" )
+            raise ValueError( f"[ERROR] Field '{self.date_variable}' is not of the required format '{self.date_format}'" )
 
         input_df = input_df.sort_values(['code', 'month'])
         input_df['ratio'] = input_df['numerator']/(input_df['denominator'])
@@ -387,13 +387,14 @@ class ChangeDetection(object):
                 self.run_if_needed(out_path)
 
         except NameError as e:
-            print(f"Columns of {self.csv_name} are not as expected")
-            print(f"You may have to specify the column names using the numberator_variable and/or denominator_variable")
+            print( e )
+            print(f"[ERROR] Columns of {self.csv_name} are not as expected")
+            print(f"[ERROR] Specify the column names using the numberator_variable and/or denominator_variable")
             sys.stdout.flush()
         
         except ValueError as e:
             print( e )
-            print("Specify the date format using the date_format parameter (by default this is '%Y-%m-%d')")
+            print("[ERROR] Specify the date format using the date_format parameter (by default this is '%Y-%m-%d')")
             sys.stdout.flush()
 
     def clear(self):
@@ -412,7 +413,7 @@ class ChangeDetection(object):
         p2.start()
 
         if self.verbose == True:
-            print("*** Process initiated: ", end='')
+            print("\n[INFO] Process initiated: ", end='')
             print( p2 )
             sys.stdout.flush()    
     
