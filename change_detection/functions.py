@@ -83,9 +83,14 @@ class ChangeDetection(object):
         self.use_cache = use_cache
         self.csv_name = csv_name
         self.overwrite = overwrite
-        self.draw_figures = draw_figures
+        self.draw_figures = self._draw_figures_check(draw_figures)
         self.bq_folder = bq_folder
     
+    def _draw_figures_check(self, v):
+        if not (v in ['yes','no'] ):
+            raise Exception("The 'draw_figures' parameter should be 'yes' or 'no'")
+        return(v)
+
     def get_working_dir(self, folder):
         folder_name = folder.replace('%', '')
         return os.path.join(self.base_dir, self.data_subdir, folder_name)
