@@ -31,6 +31,7 @@ def run_r_script(path):
     command = 'Rscript'
     path2script = os.path.join(os.getcwd(), path)
     cmd = [command, path2script]
+
     return subprocess.call(cmd)
 
 
@@ -51,6 +52,8 @@ class ChangeDetection(object):
                  denominator_variable = 'denominator',
                  date_variable = 'month',
                  date_format = "%Y-%m-%d",
+                 base_dir = os.getcwd(),
+                 data_subdir = 'data',
                  direction='both',
                  use_cache=True,
                  csv_name='bq_cache.csv',
@@ -74,6 +77,8 @@ class ChangeDetection(object):
                                  "month": self.date_variable,
                                  "numerator": self.numerator_variable,
                                  "denominator": self.denominator_variable}
+        self.base_dir = base_dir
+        self.data_subdir = data_subdir
         self.direction = direction
         self.use_cache = use_cache
         self.csv_name = csv_name
@@ -83,7 +88,7 @@ class ChangeDetection(object):
     
     def get_working_dir(self, folder):
         folder_name = folder.replace('%', '')
-        return os.path.join(os.getcwd(), 'data', folder_name)
+        return os.path.join(self.base_dir, self.data_subdir, folder_name)
     
     def create_dir(self, dir_path):
         os.makedirs(dir_path, exist_ok=True)
@@ -109,11 +114,12 @@ class ChangeDetection(object):
             csv_path=csv_path,
             use_cache=self.use_cache
             )
+
         return measure_list['table_id']
 
     def get_custom_measure_list(self):
         return [entry.name.split('.',1)[0] for entry
-        in os.scandir('data/measure_sql/{name}'.format(name=self.name))
+        in os.scandir('{subdir}/measure_sql/{name}'.format(name=self.name,subdir=self.data_subdir))
         if entry.name.endswith('.sql')]
     
     def get_measure_query(self, measure_name):
@@ -162,6 +168,7 @@ class ChangeDetection(object):
                                use_cache=self.use_cache)
         else:
             get_data_dir = self.get_working_dir(self.name)
+
             self.create_dir(get_data_dir)
             query = self.get_custom_query()
             csv_path = os.path.join(get_data_dir, self.csv_name)
@@ -279,7 +286,7 @@ class ChangeDetection(object):
     def run_r_script(self, i, script_name, input_name, output_name, *args):
         '''        
         - have reduced outputs (a bit faster that way)
-            - for debugging purposes use `verbose` argument"
+        - for debugging purposes use `verbose` argument"
         '''
         ## Define R command
         command = 'Rscript'
@@ -322,7 +329,7 @@ class ChangeDetection(object):
             
             df = pd.DataFrame(item)
             df.to_csv(os.path.join(self.working_dir, input_name))
-            
+
             process = self.run_r_script(i,
                                         script_name,
                                         input_name,
@@ -379,6 +386,12 @@ class ChangeDetection(object):
     def detect_change(self):
 
         try:
+            if self.csv_name != 'bq_cache.csv':
+                    self.working_dir = self.get_working_dir(self.name)
+                    csv_path = os.path.join(self.working_dir, self.csv_name)
+                    if not os.path.isfile(csv_path):
+                        raise FileNotFoundError(f"[ERROR] File {csv_path} does not exist")
+
             if self.measure:
                 for measure_name in self.measure_list:
                     folder_name = os.path.join(self.name, measure_name)
@@ -399,6 +412,11 @@ class ChangeDetection(object):
         except ValueError as e:
             print( e )
             print("         Specify the date format using the date_format parameter (by default this is '%Y-%m-%d')")
+            sys.stdout.flush()
+
+        except FileNotFoundError as e:
+            print( e )
+            print("        Check the name and location of the input .csv file")
             sys.stdout.flush()
 
     def clear(self):
