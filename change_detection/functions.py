@@ -97,6 +97,9 @@ class ChangeDetection(object):
     
     def create_dir(self, dir_path):
         os.makedirs(dir_path, exist_ok=True)
+        if ( self.verbose == True ):
+            print( f"[INFO] Creating 'figures' directory in {dir_path}" )
+            sys.stdout.flush()
         os.makedirs(os.path.join(dir_path, 'figures'), exist_ok=True)
     
     def get_measure_list(self):
