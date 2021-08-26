@@ -299,6 +299,10 @@ class ChangeDetection(object):
         for arg in args:
             arguments.append(arg)
 
+        if ( self.verbose ):
+            print( f"[INFO/R command] [{' '.join(cmd)} {' '.join(arguments)}]")
+            sys.stdout.flush()
+
         ## run the command
         if i == 0:
             if self.verbose:
