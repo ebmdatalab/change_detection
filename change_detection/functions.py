@@ -435,6 +435,9 @@ class ChangeDetection(object):
         if self.csv_name == 'bq_cache.csv':
             p1 = Process(target = self.get_data)
             p1.start()
+        else:
+            get_data_dir = self.get_working_dir(self.name)
+            self.create_dir(get_data_dir)
         p2 = Process(target = self.detect_change)
         p2.start()
 
